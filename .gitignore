@@ -1,0 +1,45 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+
+# Database & local storage
+*.db
+*.sqlite3
+
+# Generated clips & temporary runs
+**/data/clips/*.mp4
+**/data/clips/*.jpg
+**/data/clips/*.png
+
+# Testing & Cache
+.pytest_cache/
+.coverage
+htmlcov/
+.eslintcache
+
+# Production build
+dist/
+build/
+
+# Local Environment
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# OS Files
+.DS_Store
+Thumbs.db
