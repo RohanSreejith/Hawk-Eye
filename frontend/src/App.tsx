@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { HawkDashboard } from './components/HawkDashboard';
+import { WelcomeIntro } from './components/WelcomeIntro';
 import {
   fetchIncidents,
   fetchSettings,
@@ -8,10 +9,18 @@ import {
 import { Incident, SupervisorSettings } from './types';
 
 export function App() {
+  const [showIntro, setShowIntro] = useState(() => {
+    return !sessionStorage.getItem('hawk_welcome_seen');
+  });
   const [latestIncident, setLatestIncident] = useState<Incident | null>(null);
   const [supervisorSettings, setSupervisorSettings] = useState<SupervisorSettings | null>(null);
   const pendingQueueRef = useRef<Incident[]>([]);
   const latestIncidentRef = useRef<Incident | null>(null);
+
+  const handleFinishIntro = () => {
+    sessionStorage.setItem('hawk_welcome_seen', 'true');
+    setShowIntro(false);
+  };
 
   // Keep ref synchronized with state for immediate access in event handlers
   useEffect(() => {
@@ -124,7 +133,8 @@ export function App() {
 
   return (
     <div style={{ position: 'relative', width: '100%', minHeight: '100vh', overflowY: 'auto', overflowX: 'hidden' }}>
-      <HawkDashboard />
+      {showIntro && <WelcomeIntro onComplete={handleFinishIntro} />}
+      <HawkDashboard onReplayIntro={() => setShowIntro(true)} />
     </div>
   );
 }

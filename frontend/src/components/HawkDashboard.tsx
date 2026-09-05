@@ -27,7 +27,8 @@ import {
   User,
   Layers,
   Octagon,
-  Flame
+  Flame,
+  Sparkles
 } from 'lucide-react';
 import forkliftImg from '../assets/forklift_thumb.jpg';
 import siteMapImg from '../assets/site_map_isometric.jpg';
@@ -42,12 +43,17 @@ interface HawkState {
   risk_assessment: any;
   event_stream: any[];
   safety_kiosk: any;
+  camera_overlays: any;
   cameras: any;
   camera_a_video: string;
   camera_b_video: string;
 }
 
-export function HawkDashboard() {
+interface HawkDashboardProps {
+  onReplayIntro?: () => void;
+}
+
+export function HawkDashboard({ onReplayIntro }: HawkDashboardProps = {}) {
   const [hawkState, setHawkState] = useState<HawkState | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString());
   const [currentDate, setCurrentDate] = useState('Tue, 5 Sep 2026');
@@ -806,6 +812,21 @@ export function HawkDashboard() {
               <Video size={12} color="#64748b" />
               <span>Feeds</span>
             </button>
+            {onReplayIntro && (
+              <button
+                style={{
+                  ...styles.scenarioUtilityBtn,
+                  borderColor: '#bae6fd',
+                  backgroundColor: '#f0f9ff',
+                  color: '#0284c7'
+                }}
+                onClick={onReplayIntro}
+                title="Replay Welcome Intro Animation"
+              >
+                <Sparkles size={12} color="#0284c7" />
+                <span style={{ fontWeight: 700 }}>Intro</span>
+              </button>
+            )}
             <button
               style={{
                 ...styles.scenarioUtilityBtn,

@@ -59,6 +59,7 @@ class HawkEngine:
         self.camera_a_video = "box_pickup-rgb-00000/008caa590c5e5b7b4bca_run_8_seed_4731920.cam_00.rgb.mp4"
         self.camera_b_video = "box_pickup-rgb-00000/008caa590c5e5b7b4bca_run_8_seed_4731920.cam_01.rgb.mp4"
 
+        self.current_step: int = 1
         # Shared State Data Structure matching HAWK UI (Default: Step 1 - Baseline All-Clear)
         self.active_events: List[Dict[str, Any]] = []
 
