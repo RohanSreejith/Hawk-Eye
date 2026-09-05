@@ -1,4 +1,11 @@
 import os
+os.environ["OPENCV_FFMPEG_THREADS"] = "1"
+os.environ["OMP_NUM_THREADS"] = "2"
+os.environ["MKL_NUM_THREADS"] = "2"
+import cv2
+cv2.setNumThreads(1)
+import torch
+torch.set_num_threads(2)
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -6,7 +13,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
 from app.database.seed import seed_database
-from app.api import incidents, cameras, zones, analytics, heatmap, demo, system, websocket, settings as settings_api, videos
+from app.api import incidents, cameras, zones, analytics, heatmap, demo, system, websocket, settings as settings_api, videos, hawk
 
 VIDEO_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data", "videos")
 os.makedirs(VIDEO_DIR, exist_ok=True)
@@ -26,7 +33,7 @@ async def lifespan(app: FastAPI):
     print("[HACK-EYE BOOT] System shutting down.")
 
 app = FastAPI(
-    title="Hack-eye - AI Construction Safety Intelligence Platform",
+    title="Hawk-Eye - AI Construction Safety Intelligence Platform",
     description="Transforms construction CCTV into an active safety kiosk system.",
     version="2.0.0",
     lifespan=lifespan
@@ -48,6 +55,7 @@ app.mount("/videos", StaticFiles(directory=VIDEO_DIR), name="videos")
 # Include Routers
 app.include_router(system.router)
 app.include_router(websocket.router)
+app.include_router(hawk.router)
 app.include_router(incidents.router)
 app.include_router(cameras.router)
 app.include_router(zones.router)

@@ -1,3 +1,4 @@
+import asyncio
 from typing import Dict, Any
 from datetime import datetime, timezone
 from app.evidence.clip_generator import clip_generator
@@ -30,8 +31,9 @@ class ResponseAgent:
         ai_summary = assessed_incident.get("ai_summary") or f"Safety hazard detected in {zone}. Risk index: {risk_score}/100."
         now_dt = datetime.now(timezone.utc)
 
-        # 1. Generate 10-second evidence clip
-        clip_path = clip_generator.generate_clip(
+        # 1. Generate 10-second evidence clip asynchronously in threadpool
+        clip_path = await asyncio.to_thread(
+            clip_generator.generate_clip,
             event_id=event_id,
             camera_id=camera_id,
             event_type=event_type,

@@ -70,37 +70,56 @@ export async function clearDemoIncidents(): Promise<any> {
   return res.json();
 }
 
-export function createWebSocket(onMessage: (data: any) => void): WebSocket {
-  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  const host = window.location.host;
-  const wsUrl = `${protocol}//${host}/ws`;
+export function createWebSocket(onMessage: (data: any) => void): { close: () => void } {
+  let isClosed = false;
+  let socket: WebSocket | null = null;
+  let reconnectTimer: any = null;
 
-  console.log('[WS SERVICE] Connecting to WebSocket:', wsUrl);
-  const socket = new WebSocket(wsUrl);
+  function connect() {
+    if (isClosed) return;
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const host = window.location.host;
+    const wsUrl = `${protocol}//${host}/ws`;
 
-  socket.onopen = () => {
-    console.log('[WS SERVICE] Connected to safety telemetry stream.');
-  };
+    console.log('[WS SERVICE] Connecting to WebSocket:', wsUrl);
+    socket = new WebSocket(wsUrl);
 
-  socket.onmessage = (event) => {
-    try {
-      const data = JSON.parse(event.data);
-      onMessage(data);
-    } catch (e) {
-      console.error('[WS ERROR] Failed to parse WebSocket message', e);
+    socket.onopen = () => {
+      console.log('[WS SERVICE] Connected to safety telemetry stream.');
+    };
+
+    socket.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        onMessage(data);
+      } catch (e) {
+        console.error('[WS ERROR] Failed to parse WebSocket message', e);
+      }
+    };
+
+    socket.onerror = (err) => {
+      console.warn('[WS WARNING] WebSocket error:', err);
+    };
+
+    socket.onclose = () => {
+      if (isClosed) return;
+      console.log('[WS SERVICE] Disconnected. Reconnecting in 3 seconds...');
+      reconnectTimer = setTimeout(connect, 3000);
+    };
+  }
+
+  connect();
+
+  return {
+    close: () => {
+      isClosed = true;
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      if (socket) {
+        socket.onclose = null;
+        socket.close();
+      }
     }
   };
-
-  socket.onerror = (err) => {
-    console.warn('[WS WARNING] WebSocket error:', err);
-  };
-
-  socket.onclose = () => {
-    console.log('[WS SERVICE] Disconnected. Reconnecting in 3 seconds...');
-    setTimeout(() => createWebSocket(onMessage), 3000);
-  };
-
-  return socket;
 }
 
 export async function fetchSettings(): Promise<any> {

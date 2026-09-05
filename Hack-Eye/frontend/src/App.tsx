@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { KioskScreen } from './components/KioskScreen';
+import { HawkDashboard } from './components/HawkDashboard';
 import {
   fetchIncidents,
   fetchSettings,
@@ -75,13 +75,10 @@ export function App() {
           console.log('[HACK-EYE] Incident resolved:', incident_id);
           const current = latestIncidentRef.current;
           if (current?.id === incident_id) {
-            // Current alert has been resolved! Check queue for next alert
             if (pendingQueueRef.current.length > 0) {
               const nextAlert = pendingQueueRef.current.shift()!;
-              console.log('[HACK-EYE] Displaying next alert from queue:', nextAlert.event_type);
               setLatestIncident(nextAlert);
             } else {
-              // Check backend for any remaining unresolved incidents
               fetchIncidents().then(incidents => {
                 const remaining = Array.isArray(incidents)
                   ? incidents.filter(i => i.status !== 'resolved' && i.id !== incident_id)
@@ -89,7 +86,7 @@ export function App() {
                 if (remaining.length > 0) {
                   setLatestIncident(remaining[0]);
                 } else {
-                  setLatestIncident(null); // Clean state -> SAFE TO WORK
+                  setLatestIncident(null);
                 }
               }).catch(() => {
                 setLatestIncident(null);
@@ -109,7 +106,6 @@ export function App() {
     const current = latestIncidentRef.current;
     if (!current) return;
 
-    // Check if next alert is in queue
     if (pendingQueueRef.current.length > 0) {
       const nextAlert = pendingQueueRef.current.shift()!;
       setLatestIncident(nextAlert);
@@ -127,11 +123,9 @@ export function App() {
   }, []);
 
   return (
-    <KioskScreen
-      latestAlert={latestIncident}
-      supervisorSettings={supervisorSettings}
-      onRefreshAlerts={handleResolveAlert}
-    />
+    <div style={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden' }}>
+      <HawkDashboard />
+    </div>
   );
 }
 

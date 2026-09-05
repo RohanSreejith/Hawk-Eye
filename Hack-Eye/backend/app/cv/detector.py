@@ -156,9 +156,9 @@ class YOLORealDetector(DetectorInterface):
             return []
         try:
             h, w = frame.shape[:2]
-            min_veh_area = (h * w) * 0.015
-            # Run with sensitive threshold to detect industrial machinery / forklifts
-            results = self.model(frame, verbose=False, conf=0.10)
+            min_veh_area = (h * w) * 0.012
+            max_veh_area = (h * w) * 0.45
+            results = self.model(frame, verbose=False, conf=0.03)
             detections = []
             for r in results:
                 for box in r.boxes:
@@ -168,25 +168,18 @@ class YOLORealDetector(DetectorInterface):
                     conf = float(box.conf[0])
                     area = (x2 - x1) * (y2 - y1)
 
-                    if label == "person" and conf >= 0.25:
+                    if (label == "person" and conf >= 0.18) or (label == "traffic light" and area < (h * w) * 0.15 and conf >= 0.03):
                         detections.append({
                             "label": "person",
                             "confidence": round(conf, 3),
                             "bbox": {"x1": x1, "y1": y1, "x2": x2, "y2": y2}
                         })
-                    elif label in ["truck", "car", "bus", "train", "boat"] and area >= min_veh_area:
-                        # Standard vehicle classes detected as forklift/machinery
-                        veh_label = "forklift" if "forklift" in getattr(self, 'context', '') or area < (h * w) * 0.6 else "truck"
-                        detections.append({
-                            "label": veh_label,
-                            "confidence": round(conf, 3),
-                            "bbox": {"x1": x1, "y1": y1, "x2": x2, "y2": y2}
-                        })
-                    elif label in ["oven", "bench"] and area >= min_veh_area and y2 > h * 0.3:
-                        # COCO substitutes for industrial reach truck / forklift chassis
+                    elif ((label in ["truck", "car", "bus", "forklift", "bench", "suitcase", "chair"] and conf >= 0.08) or (label == "tv" and conf >= 0.03)) and min_veh_area <= area <= max_veh_area:
+                        if label in ["suitcase", "bench", "chair"] and area < (h * w) * 0.02:
+                            continue
                         detections.append({
                             "label": "forklift",
-                            "confidence": round(max(conf, 0.88), 3),
+                            "confidence": round(conf, 3),
                             "bbox": {"x1": x1, "y1": y1, "x2": x2, "y2": y2}
                         })
             return detections
@@ -199,8 +192,8 @@ class YOLORealDetector(DetectorInterface):
             return []
         try:
             h, w = frame.shape[:2]
-            min_veh_area = (h * w) * 0.015
-            results = self.model.track(frame, persist=True, verbose=False, conf=0.10)
+            min_veh_area = (h * w) * 0.02
+            results = self.model.track(frame, persist=True, verbose=False, conf=0.35)
             tracked_objects = []
             for r in results:
                 if r.boxes.id is not None:
@@ -212,15 +205,15 @@ class YOLORealDetector(DetectorInterface):
                         conf = float(box.conf[0])
                         area = (x2 - x1) * (y2 - y1)
 
-                        if label == "person" and conf >= 0.25:
+                        if label == "person" and conf >= 0.35:
                             tracked_objects.append({
                                 "track_id": f"PERSON_{tid:03d}",
                                 "label": "person",
                                 "confidence": round(conf, 3),
                                 "bbox": {"x1": x1, "y1": y1, "x2": x2, "y2": y2}
                             })
-                        elif label in ["truck", "car", "bus", "train", "boat", "oven", "bench"] and area >= min_veh_area:
-                            lbl = "forklift" if label in ["oven", "bench"] or area < (h * w) * 0.6 else "truck"
+                        elif label in ["truck", "car", "bus", "forklift"] and area >= min_veh_area and conf >= 0.40:
+                            lbl = "forklift" if label in ["truck", "forklift"] and area < (h * w) * 0.6 else "truck"
                             tracked_objects.append({
                                 "track_id": f"FORKLIFT_{tid:03d}" if lbl == "forklift" else f"VEHICLE_{tid:03d}",
                                 "label": lbl,
@@ -234,15 +227,15 @@ class YOLORealDetector(DetectorInterface):
                         x1, y1, x2, y2 = box.xyxy[0].tolist()
                         conf = float(box.conf[0])
                         area = (x2 - x1) * (y2 - y1)
-                        if label == "person" and conf >= 0.25:
+                        if label == "person" and conf >= 0.35:
                             tracked_objects.append({
                                 "track_id": "PERSON_NEW",
                                 "label": "person",
                                 "confidence": round(conf, 3),
                                 "bbox": {"x1": x1, "y1": y1, "x2": x2, "y2": y2}
                             })
-                        elif label in ["truck", "car", "bus", "train", "boat", "oven", "bench"] and area >= min_veh_area:
-                            lbl = "forklift" if label in ["oven", "bench"] or area < (h * w) * 0.6 else "truck"
+                        elif label in ["truck", "car", "bus", "forklift"] and area >= min_veh_area and conf >= 0.40:
+                            lbl = "forklift" if label in ["truck", "forklift"] and area < (h * w) * 0.6 else "truck"
                             tracked_objects.append({
                                 "track_id": "FORKLIFT_001" if lbl == "forklift" else "VEHICLE_NEW",
                                 "label": lbl,

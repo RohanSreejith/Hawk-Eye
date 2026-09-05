@@ -12,6 +12,17 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 3000,
     proxy: {
+      '/api/hawk/camera': {
+        target: 'http://127.0.0.1:8001',
+        changeOrigin: true,
+        selfHandleResponse: false,
+        configure: (proxy) => {
+          proxy.on('proxyRes', (proxyRes) => {
+            // Disable buffering for MJPEG streams
+            proxyRes.headers['x-accel-buffering'] = 'no';
+          });
+        }
+      },
       '/api': {
         target: 'http://127.0.0.1:8001',
         changeOrigin: true
