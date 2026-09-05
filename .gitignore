@@ -1,45 +1,41 @@
-# Dependencies
+# Node
 node_modules/
-.pnp
-.pnp.js
+dist/
+build/
+.vite/
+**/.vite/
+.npm/
+
+# Expo / React Native
+.expo/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
 
 # Python
 __pycache__/
 *.py[cod]
 *$py.class
-*.so
-.Python
-env/
+*.env
+.venv/
 venv/
-ENV/
-.venv
-
-# Database & local storage
 *.db
 *.sqlite3
 
-# Generated clips & temporary runs
-**/data/clips/*.mp4
-**/data/clips/*.jpg
-**/data/clips/*.png
+# Video / Temp Clips
+data/clips/*.mp4
+data/snapshots/*.jpg
 
-# Testing & Cache
-.pytest_cache/
-.coverage
-htmlcov/
-.eslintcache
-
-# Production build
-dist/
-build/
-
-# Local Environment
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# OS Files
+# IDE
+.vscode/
+.idea/
 .DS_Store
-Thumbs.db
+data/
+data/videos/
+*.mp4
+*.pt
+*.avi
+*.mov

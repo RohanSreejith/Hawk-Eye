@@ -1,0 +1,89 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --color-bg-primary: #f0f4f9;
+    --color-bg-panel: #ffffff;
+    --color-bg-card: #ffffff;
+    --color-border: #e2e8f0;
+    --color-safe: #10b981;
+    --color-warning: #f59e0b;
+    --color-high: #f97316;
+    --color-critical: #ef4444;
+  }
+
+  body {
+    background-color: #f0f4f9;
+    color: #0f172a;
+    font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* Custom Industrial UI Accents */
+.industrial-panel {
+  background: #11161f;
+  border: 1px solid #1f2937;
+  border-radius: 6px;
+}
+
+.industrial-card {
+  background: #151b26;
+  border: 1px solid #243042;
+}
+
+.hud-font {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+}
+
+/* Radar pulse animation for online status */
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.6);
+  }
+  50% {
+    opacity: 0.6;
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.9);
+  }
+}
+
+.pulse-online {
+  animation: pulse-glow 2s infinite ease-in-out;
+}
+
+/* Flashing critical alarm animation */
+@keyframes alert-flash {
+  0%, 100% {
+    border-color: rgba(239, 68, 68, 1);
+    background-color: rgba(239, 68, 68, 0.15);
+  }
+  50% {
+    border-color: rgba(239, 68, 68, 0.4);
+    background-color: rgba(239, 68, 68, 0.05);
+  }
+}
+
+.alert-critical-flash {
+  animation: alert-flash 1.2s infinite ease-in-out;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 5px;
+  border: 2px solid #f1f5f9;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
