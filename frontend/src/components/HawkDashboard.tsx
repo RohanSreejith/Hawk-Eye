@@ -70,6 +70,9 @@ export function HawkDashboard() {
   const audioCtxRef = useRef<AudioContext | null>(null);
   const cam1ContainerRef = useRef<HTMLDivElement>(null);
   const cam2ContainerRef = useRef<HTMLDivElement>(null);
+  // Direct refs to the <img> elements for imperative MJPEG reconnect
+  const cam1ImgRef = useRef<HTMLImageElement | null>(null);
+  const cam2ImgRef = useRef<HTMLImageElement | null>(null);
 
   // Initialize or resume Web Audio Context on user gesture
   const getAudioContext = () => {
@@ -176,10 +179,28 @@ export function HawkDashboard() {
     });
   };
 
-  // Connect directly to backend port 8001
+  // Stream directly from backend — Vite proxy cannot reliably handle MJPEG multipart streams
   const getCameraStreamUrl = (camera: 'a' | 'b') => {
     const host = window.location.hostname || 'localhost';
     return `http://${host}:8001/api/hawk/camera/${camera}/stream?v=${streamVersion}`;
+  };
+
+  // Force browser to drop and re-open the MJPEG connection by blanking src then reassigning
+  const forceReconnectStreams = () => {
+    const v = Date.now();
+    const host = window.location.hostname || 'localhost';
+    [cam1ImgRef, cam2ImgRef].forEach((ref, i) => {
+      const cam = i === 0 ? 'a' : 'b';
+      if (ref.current) {
+        ref.current.src = ''; // drop current connection immediately
+        setTimeout(() => {
+          if (ref.current) {
+            ref.current.src = `http://${host}:8001/api/hawk/camera/${cam}/stream?v=${v}`;
+          }
+        }, 80); // 80ms pause ensures connection is fully closed before reopening
+      }
+    });
+    setStreamVersion(v);
   };
 
   // Live Clock
@@ -256,6 +277,22 @@ export function HawkDashboard() {
     }
   }, [hawkState?.safety_kiosk?.title, hawkState?.safety_kiosk?.active]);
 
+  const getCameraLocation = (camera: 'a' | 'b') => {
+    if (camera === 'a') {
+      if (scenarioStep === 3) return 'Entrance (Outside Yard)';
+      if (scenarioStep === 5) return 'Loading Bay (Ceiling Cam)';
+      if (scenarioStep === 7) return 'Storage Bay (Thermal Cam)';
+      if (scenarioStep === 2 || scenarioStep === 4) return 'Corridor (Approach Cam)';
+      return 'Zone A (Entrance)';
+    } else {
+      if (scenarioStep === 3) return 'Entrance (Inside Doorway)';
+      if (scenarioStep === 5) return 'Loading Bay (Eye Level)';
+      if (scenarioStep === 7) return 'Storage Bay (Evacuation)';
+      if (scenarioStep === 2 || scenarioStep === 4) return 'Zone B (Loading Area)';
+      return 'Zone B (Aisle 4)';
+    }
+  };
+
   const handleTriggerStep = async (step: number) => {
     getAudioContext();
     setScenarioStep(step);
@@ -293,9 +330,13 @@ export function HawkDashboard() {
         if (data.hawk_state) {
           setHawkState(data.hawk_state);
         }
+        // Force browser to drop and re-open MJPEG connections after backend confirms swap.
+        // 350ms gives the reader worker time to start encoding the new video's frames.
+        setTimeout(() => forceReconnectStreams(), 350);
       }
     } catch (e) {
       console.warn('Error triggering scenario:', e);
+      forceReconnectStreams();
     }
   };
 
@@ -310,6 +351,7 @@ export function HawkDashboard() {
         }),
       });
       setIsVideoModalOpen(false);
+      setStreamVersion(Date.now());
       fetchState();
     } catch (e) {
       console.warn('Failed to update camera videos:', e);
@@ -854,20 +896,24 @@ export function HawkDashboard() {
 
           {/* Camera Feeds Stack (Cam 1 & Cam 2) */}
           <div style={styles.camsStack}>
-            {/* CAMERA 1: Entrance (Outside) */}
+            {/* CAMERA 1 */}
             <div style={styles.camCard} ref={cam1ContainerRef}>
               <img
+                ref={cam1ImgRef}
                 key={`cam_a_${streamVersion}`}
                 src={getCameraStreamUrl('a')}
-                alt="Camera 1 - Entrance"
+                alt="Camera 1"
                 style={styles.camImg}
+                onError={() => {
+                  setTimeout(() => forceReconnectStreams(), 1500);
+                }}
               />
 
-              {/* Top-Left Pill: Cam 1 Entrance (Outside) */}
+              {/* Top-Left Pill: Cam 1 Location */}
               <div style={styles.camTopLeftPill}>
                 <Camera size={14} color="#ffffff" />
                 <span style={styles.camNumBold}>Cam 1</span>
-                <span style={styles.camLocText}>Entrance (Outside)</span>
+                <span style={styles.camLocText}>{getCameraLocation('a')}</span>
               </div>
 
               {/* Top-Right Pill: LIVE */}
@@ -892,7 +938,7 @@ export function HawkDashboard() {
                 </button>
                 <button
                   style={styles.camIconBtn}
-                  onClick={() => setStreamVersion(v => v + 1)}
+                  onClick={() => forceReconnectStreams()}
                   title="Refresh Camera Feed"
                 >
                   <Camera size={13} color="#ffffff" />
@@ -900,20 +946,24 @@ export function HawkDashboard() {
               </div>
             </div>
 
-            {/* CAMERA 2: Aisle 4 (Inside) */}
+            {/* CAMERA 2 */}
             <div style={styles.camCard} ref={cam2ContainerRef}>
               <img
+                ref={cam2ImgRef}
                 key={`cam_b_${streamVersion}`}
                 src={getCameraStreamUrl('b')}
-                alt="Camera 2 - Aisle 4"
+                alt="Camera 2"
                 style={styles.camImg}
+                onError={() => {
+                  setTimeout(() => forceReconnectStreams(), 1500);
+                }}
               />
 
               {/* Top-Left Pill: Cam 2 Location */}
               <div style={styles.camTopLeftPill}>
                 <Camera size={14} color="#ffffff" />
                 <span style={styles.camNumBold}>Cam 2</span>
-                <span style={styles.camLocText}>{scenarioStep === 3 ? 'Entrance (Inside)' : 'Aisle 4 (Inside)'}</span>
+                <span style={styles.camLocText}>{getCameraLocation('b')}</span>
               </div>
 
               {/* Top-Right Pill: LIVE */}
@@ -938,7 +988,7 @@ export function HawkDashboard() {
                 </button>
                 <button
                   style={styles.camIconBtn}
-                  onClick={() => setStreamVersion(v => v + 1)}
+                  onClick={() => forceReconnectStreams()}
                   title="Refresh Camera Feed"
                 >
                   <Camera size={13} color="#ffffff" />

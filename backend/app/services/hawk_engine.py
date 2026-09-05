@@ -486,8 +486,9 @@ class HawkEngine:
             try:
                 from app.services.camera_manager import camera_manager as _cm
                 import os as _os
-                path_a = _os.path.join(VIDEO_DIR, vids["camera_a"])
-                path_b = _os.path.join(VIDEO_DIR, vids["camera_b"])
+                path_a = _os.path.normpath(_os.path.join(VIDEO_DIR, vids["camera_a"]))
+                path_b = _os.path.normpath(_os.path.join(VIDEO_DIR, vids["camera_b"]))
+                print(f"[HAWK ENGINE] Scenario step {step} ({mode}): swapping videos ->\n  Cam A: {path_a}\n  Cam B: {path_b}")
                 _cm.set_hawk_videos(path_a, path_b)
                 _cm.set_scenario_mode(mode)
             except Exception as e:

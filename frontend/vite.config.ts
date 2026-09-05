@@ -12,20 +12,16 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 3000,
     proxy: {
-      '/api/hawk/camera': {
+      // Single catch-all for all backend API routes — avoids route-ordering conflicts
+      '/api': {
         target: 'http://127.0.0.1:8001',
         changeOrigin: true,
-        selfHandleResponse: false,
+        // Disable response buffering so MJPEG multipart streams flow through in real-time
         configure: (proxy) => {
           proxy.on('proxyRes', (proxyRes) => {
-            // Disable buffering for MJPEG streams
             proxyRes.headers['x-accel-buffering'] = 'no';
           });
         }
-      },
-      '/api': {
-        target: 'http://127.0.0.1:8001',
-        changeOrigin: true
       },
       '/ws': {
         target: 'ws://127.0.0.1:8001',

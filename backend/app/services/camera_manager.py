@@ -41,6 +41,32 @@ class CameraSyncCoordinator:
 
 camera_sync_coordinator = CameraSyncCoordinator()
 
+# Global cache of decoded video frames so switching videos is 0ms instant
+_VIDEO_FRAME_CACHE: Dict[str, List[np.ndarray]] = {}
+
+def get_cached_video_frames(path: Optional[str]) -> List[np.ndarray]:
+    """Decodes and caches video frames resized to (960, 540). Thread-safe."""
+    if not path or not os.path.exists(path):
+        return []
+    norm = os.path.normpath(path)
+    if norm in _VIDEO_FRAME_CACHE and _VIDEO_FRAME_CACHE[norm]:
+        return _VIDEO_FRAME_CACHE[norm]
+    try:
+        cap = cv2.VideoCapture(norm)
+        frames = []
+        while True:
+            ret, f = cap.read()
+            if not ret or f is None:
+                break
+            frames.append(cv2.resize(f, (960, 540)))
+        cap.release()
+        _VIDEO_FRAME_CACHE[norm] = frames
+        print(f"[VIDEO CACHE] Cached {len(frames)} frames for {os.path.basename(norm)}")
+        return frames
+    except Exception as e:
+        print(f"[VIDEO CACHE] Error caching frames for {norm}: {e}")
+        return []
+
 
 class CameraStreamer:
     """
@@ -53,28 +79,21 @@ class CameraStreamer:
       Thread 2 (_inference_worker): Asynchronously grabs the latest raw frame, downsamples to
                                     640x360, runs YOLO + PPE at ~4-5 Hz, updates detection state,
                                     and sleeps 120ms between passes so the CPU stays cool.
-      Stream (generate_mjpeg_stream): Yields pre-encoded JPEGs as soon as reader emits them.
     """
-
-    def __init__(self, camera_id: str, name: str, zone: str, video_path: Optional[str] = None,
-                 run_inference: bool = True):
+    def __init__(self, camera_id: str, name: str, zone: str, video_path: Optional[str] = None):
         self.camera_id = camera_id
         self.name = name
         self.zone = zone
-        self.is_active = True
         self.video_path = video_path
-        self.run_inference = run_inference
-        self.cap = None
+        self.cap: Optional[cv2.VideoCapture] = None
+        self.is_active = True
+        self.run_inference = True
 
-        # Shared frame for inference
-        self._raw_frame: Optional[np.ndarray] = None
+        # Lock protecting the shared raw frame handed from reader to inference worker
         self._raw_lock = threading.Lock()
+        self._raw_frame: Optional[np.ndarray] = None
 
-        # Shared stream state (updated by _reader_worker at 30 fps)
-        self.latest_jpeg: Optional[bytes] = None
-        self.frame_id: int = 0
-
-        # Shared detection state (written by _inference_worker, read by _reader_worker)
+        # Lock protecting the AI detection state written by inference worker and read by reader
         self._state_lock = threading.Lock()
         self.active_detections: List[Dict] = []
         self._ppe_cache: Dict = {}
@@ -82,15 +101,19 @@ class CameraStreamer:
         self.closest_pair = None
         self.scenario_mode: str = "baseline"
 
-        # Persistence helpers
+        # Shared stream state (updated by _reader_worker at 30 fps)
+        self.latest_jpeg: Optional[bytes] = None
+        self.frame_id: int = 0
+
+        self.cached_frames: List[np.ndarray] = []
+
+        # Detection persistence helpers (prevent single-frame dropouts)
         self.persisted_vehicle = None
         self.vehicle_hold_count: int = 0
         self.persisted_person = None
         self.person_hold_count: int = 0
-
         self.last_crash_trigger: float = 0.0
         self.last_ppe_trigger: float = 0.0
-        self.cached_frames: List[np.ndarray] = []
 
         self._init_capture()
         self._start_workers()
@@ -98,23 +121,6 @@ class CameraStreamer:
     # ------------------------------------------------------------------
     # Capture initialization & hot-swap
     # ------------------------------------------------------------------
-
-    def _load_cached_frames(self, path: Optional[str]) -> List[np.ndarray]:
-        if not path or not os.path.exists(path):
-            return []
-        try:
-            cap = cv2.VideoCapture(path)
-            frames = []
-            while True:
-                ret, f = cap.read()
-                if not ret or f is None:
-                    break
-                frames.append(cv2.resize(f, (960, 540)))
-            cap.release()
-            return frames
-        except Exception as e:
-            print(f"[STREAMER {self.camera_id}] Error caching frames: {e}")
-            return []
 
     def _init_capture(self):
         with _cv_lock:
@@ -128,20 +134,29 @@ class CameraStreamer:
                 if os.path.exists(default_vid):
                     self.video_path = default_vid
                     self.cap = cv2.VideoCapture(default_vid)
-        self.cached_frames = self._load_cached_frames(self.video_path)
+        self.cached_frames = get_cached_video_frames(self.video_path)
 
     def set_video(self, path: str):
-        if self.video_path == path and self.cached_frames:
+        if not path or not os.path.exists(path):
+            print(f"[STREAMER {self.camera_id}] set_video path does not exist: {path}")
             return
-        new_frames = self._load_cached_frames(path)
+        norm = os.path.normpath(path)
+        new_frames = get_cached_video_frames(norm)
+        if not new_frames:
+            print(f"[STREAMER {self.camera_id}] No frames loaded for: {norm}")
+            return
+
+        # Atomically swap video path and cached frames; release stale cv2 cap
         with _cv_lock:
-            self.video_path = path
-            self.cached_frames = new_frames
+            self.video_path = norm
+            self.cached_frames = new_frames  # atomic ref swap (GIL guarantees this)
             if self.cap is not None:
                 self.cap.release()
                 self.cap = None
-            if os.path.exists(path):
-                self.cap = cv2.VideoCapture(path)
+            # Only open a new cap for the fallback (non-cached) code path
+            if not new_frames:
+                self.cap = cv2.VideoCapture(norm)
+
         with self._state_lock:
             self.active_detections = []
             self._ppe_cache = {}
@@ -151,6 +166,19 @@ class CameraStreamer:
             self.vehicle_hold_count = 0
             self.persisted_person = None
             self.person_hold_count = 0
+
+        # Immediately encode and publish the very first frame of the new video so the
+        # browser sees something the moment the <img> reconnects after a tab switch.
+        frames_snapshot = self.cached_frames  # stable local ref
+        if frames_snapshot:
+            try:
+                canvas = self._draw_hud(frames_snapshot[0], self.scenario_mode, False, None, [], {}, 960, 540)
+                ret, buffer = cv2.imencode(".jpg", canvas, [cv2.IMWRITE_JPEG_QUALITY, 72])
+                if ret:
+                    self.latest_jpeg = buffer.tobytes()
+                    self.frame_id += 1
+            except Exception as e:
+                print(f"[STREAMER {self.camera_id}] Error drawing initial frame: {e}")
 
     # ------------------------------------------------------------------
     # Worker threads
@@ -178,8 +206,11 @@ class CameraStreamer:
             t_start = time.time()
             frame = None
 
-            if self.cached_frames:
-                total_frames = len(self.cached_frames)
+            # Take a stable local reference to avoid race with set_video() reassignment
+            frames = self.cached_frames
+
+            if frames:
+                total_frames = len(frames)
                 is_warn = (self.scenario_mode == "warn")
                 if is_warn:
                     # Choreographed storytelling between Camera A (Outside Yard) & Camera B (Entrance Doorway Inside):
@@ -215,18 +246,11 @@ class CameraStreamer:
 
                     frame_idx = max(0, min(frame_idx, total_frames - 1))
                 else:
-                    play_dur = 6.5
-                    hold_dur = 0.8
-                    cycle_dur = play_dur + hold_dur
-
+                    fps = 25.0
+                    cycle_dur = max(1.0, total_frames / fps)
                     elapsed = (time.time() - camera_sync_coordinator.sync_start_time) % cycle_dur
-                    if elapsed < play_dur:
-                        pct = elapsed / play_dur
-                    else:
-                        pct = 1.0  # Hold the final resolved frame before looping together
-
-                    frame_idx = min(int(pct * total_frames), total_frames - 1)
-                frame = self.cached_frames[frame_idx]
+                    frame_idx = min(int(elapsed * fps), total_frames - 1)
+                frame = frames[frame_idx]
             else:
                 with _cv_lock:
                     if self.cap and self.cap.isOpened():
@@ -757,6 +781,19 @@ class CameraManager:
             "CAM_03": {"id": "CAM_03", "name": "CAM 03 - Crane Area", "zone": "Crane Area", "status": "online", "stream_url": "/api/cameras/CAM_03/stream"},
             "CAM_05": {"id": "CAM_05", "name": "CAM 05 - Material Storage", "zone": "Material Storage", "status": "online", "stream_url": "/api/cameras/CAM_05/stream"},
         }
+        # Pre-cache scenario videos in background thread
+        threading.Thread(target=self._preload_scenario_videos, daemon=True).start()
+
+    def _preload_scenario_videos(self):
+        try:
+            from app.services.hawk_engine import hawk_engine
+            for step, vids in hawk_engine.SCENARIO_VIDEOS.items():
+                pa = os.path.normpath(os.path.join(VIDEO_DIR, vids["camera_a"]))
+                pb = os.path.normpath(os.path.join(VIDEO_DIR, vids["camera_b"]))
+                get_cached_video_frames(pa)
+                get_cached_video_frames(pb)
+        except Exception as e:
+            print(f"[PRELOAD] Error preloading scenario videos: {e}")
 
     def set_main_loop(self, loop: asyncio.AbstractEventLoop):
         self.main_loop = loop
