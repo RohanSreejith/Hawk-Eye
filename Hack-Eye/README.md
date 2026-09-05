@@ -8,7 +8,7 @@ A distributed AI safety system for construction sites that uses multiple vision 
 ## 1. Product Overview
 Construction sites worldwide already deploy hundreds of CCTV cameras, but they act almost entirely as **passive recording systems**. When a dangerous event occurs (worker without a hard hat, an unauthorized entry into a crane radius, or a worker stepping behind a reversing 20-ton dump truck), human operators rarely notice until an injury is reported.
 
-**SAHAYI transforms existing CCTV into an active safety system.** It processes video streams with edge computer vision, evaluates spatial hazard rules, computes a transparent 0–100 risk score, sounds instant local kiosk audio alarms to nearby workers, alerts supervisors on their mobile devices with 10-second forensic evidence clips, and builds a live site risk heatmap.
+**Hawk-Eye transforms existing CCTV into an active safety system.** It processes video streams with edge computer vision, evaluates spatial hazard rules, computes a transparent 0–100 risk score, sounds instant local kiosk audio alarms to nearby workers, alerts supervisors on their mobile devices with 10-second forensic evidence clips, and builds a live site risk heatmap.
 
 ---
 
@@ -89,27 +89,27 @@ Detects and classifies violations across the entire construction safety matrix:
 
 ### One-Click Start (Windows PowerShell)
 ```powershell
-.\sahayi\scripts\start.ps1
+.\Hawk-Eye\scripts\start.ps1
 ```
 
 ### One-Click Start (Linux / macOS / Bash)
 ```bash
-chmod +x sahayi/scripts/*.sh
-./sahayi/scripts/start.sh
+chmod +x Hawk-Eye/scripts/*.sh
+./Hawk-Eye/scripts/start.sh
 ```
 
 ### Manual Development Startup
 
 #### Terminal 1: FastAPI Backend
 ```powershell
-cd sahayi/backend
+cd Hawk-Eye/backend
 $env:PYTHONPATH = "."
 python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
 #### Terminal 2: React Vite Frontend
 ```powershell
-cd sahayi/frontend
+cd Hawk-Eye/frontend
 npm run dev
 ```
 
@@ -128,4 +128,4 @@ npm run dev
 ---
 
 ## 7. Privacy Statement
-> **Video analysis is performed strictly for site safety. Sahayi does not perform facial recognition, biometric profiling, or worker identity tracking. All detections use temporary anonymous track identifiers.**
+> **Video analysis is performed strictly for site safety. Hawk-Eye does not perform facial recognition, biometric profiling, or worker identity tracking. All detections use temporary anonymous track identifiers.**
