@@ -67,7 +67,7 @@ export function HawkDashboard({ onReplayIntro }: HawkDashboardProps = {}) {
   const [streamVersion, setStreamVersion] = useState(0);
   const [selectedZoneFilter, setSelectedZoneFilter] = useState('All Zones');
   const [isZoneDropdownOpen, setIsZoneDropdownOpen] = useState(false);
-  const [isSiteDropdownOpen, setIsSiteDropdownOpen] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(3);
 
   // Audio Siren & Voice Alerts State
@@ -364,17 +364,7 @@ export function HawkDashboard({ onReplayIntro }: HawkDashboardProps = {}) {
     }
   };
 
-  const handleOpenAnalysis = async (incidentId: number = 1) => {
-    try {
-      const res = await fetch(`/api/hawk/incidents/${incidentId}/analysis`);
-      if (res.ok) {
-        const data = await res.json();
-        setAnalysisModalIncident(data);
-      }
-    } catch (e) {
-      console.warn('Failed to load incident analysis:', e);
-    }
-  };
+  // Full analysis handler is defined after scenario telemetry mapping below
 
   const toggleFullscreen = (containerRef: React.RefObject<HTMLDivElement | null>) => {
     if (!containerRef.current) return;
@@ -503,6 +493,368 @@ export function HawkDashboard({ onReplayIntro }: HawkDashboardProps = {}) {
       riskBg: '#fef3c7',
       thumbType: 'forklift' as const,
     };
+  })();
+
+  // Dynamic Multi-Agent Telemetry & Forensic Intelligence tailored per scenario
+  const currentTelemetry = (() => {
+    if (scenarioStep === 1) {
+      return {
+        perception: {
+          target1: 'Worker P12 (98% conf)',
+          target2: 'High-Bay Pallet Racks',
+          speed: '1.2 m/s (Walking)',
+          separation: '0.6m (Stationary forklift)',
+          extraLabel: 'PPE Status:',
+          extraValue: 'MISSING HELMET & VEST',
+        },
+        risk: {
+          timeToCollision: 'Active Non-Compliance',
+          probability: '86.4% Exposure',
+          trajectory: 'Loading Zone Entry Path',
+          safetyIndex: '0.42 / 1.0 (Warning)',
+          hazardLevel: 'MEDIUM RISK',
+        },
+        response: {
+          kiosk: 'VOICE DIRECTIVE BROADCAST',
+          interlock: 'CHECKPOINT AUDIT FLAGGED',
+          supervisor: 'Mobile Push Dispatched',
+          incidentId: '#INC-PPE-2026-01',
+        },
+        forensic: {
+          root_cause: 'Worker entered active high-bay racking and material handling zone from the administrative walkway without donning required Type 1 hardhat and high-visibility reflective vest.',
+          osha_regulation: 'OSHA Standard 1910.132(a) & 1910.135(a)(1) - Personal Protective Equipment & Head Protection in Industrial Operating Zones.',
+          recommendations: 'Position mandatory PPE checkpoint signage and optical scan gate at Zone B portal entrance. Issue worker safety compliance reminder via supervisor terminal and log to safety record.',
+          timeline: [
+            { time: 'T - 4.8s', step: 'Worker Identification', detail: 'Camera B identified Worker P12 entering active loading and racking aisle.' },
+            { time: 'T - 3.2s', step: 'PPE Compliance Verification', detail: 'Real-time PPE vision model detected absence of Hard Hat and High-Vis Vest.' },
+            { time: 'T - 1.1s', step: 'Kiosk & Audio Pre-Warning', detail: 'Zone B Safety Kiosk broadcasted localized audio directive: "Mandatory safety gear required."' },
+            { time: 'T + 0.0s', step: 'Compliance Ticket Dispatched', detail: 'Supervisor mobile terminal alerted; compliance infraction recorded to shift safety log.' },
+          ]
+        }
+      };
+    } else if (scenarioStep === 3) {
+      return {
+        perception: {
+          target1: 'Forklift V01 (94% conf)',
+          target2: 'Worker P12 (89% conf)',
+          speed: '12.8 km/h (Approaching)',
+          separation: '8.5 m (Closing to doorway)',
+          extraLabel: 'Line of Sight:',
+          extraValue: 'Obscured by Exterior Wall',
+        },
+        risk: {
+          timeToCollision: 'ETA ~ 3.5 seconds',
+          probability: '84.5% Convergence',
+          trajectory: 'Exterior Yard → Doorway Threshold',
+          safetyIndex: '0.28 / 1.0 (Caution)',
+          hazardLevel: 'HIGH RISK',
+        },
+        response: {
+          kiosk: 'DOORWAY ALARM ARMED',
+          interlock: 'OUTSIDE STANDOFF HORN ACTIVE',
+          supervisor: 'Proactive Alert Dispatched',
+          incidentId: '#INC-MACH-2026-03',
+        },
+        forensic: {
+          root_cause: 'Blind corner doorway entrance connecting exterior staging yard to interior warehouse corridor lacking active early acoustic standoff beacons on inbound mobile equipment.',
+          osha_regulation: 'OSHA Standard 1910.178(n)(4) - Powered Industrial Trucks Safe Navigation, Blind Intersections & Horn Standoff.',
+          recommendations: 'Direct personnel away from entrance apron during active vehicle transit cycles. Deploy blue floor projection spotlight and acoustic threshold horn at blind doorway threshold.',
+          timeline: [
+            { time: 'T - 5.2s', step: 'Entrance Detection', detail: 'Outside Camera identified Forklift V01 accelerating in transit toward entrance doorway.' },
+            { time: 'T - 3.8s', step: 'Perception Broadcast', detail: 'Inbound trajectory published across multi-agent shared state to interior camera.' },
+            { time: 'T - 2.5s', step: 'Hazard Anticipation', detail: 'Agent B received inbound telemetry while vehicle was obscured behind wall.' },
+            { time: 'T - 1.1s', step: 'Doorway Clearance Warning', detail: 'Safety Kiosk and mobile alert issued to worker standing at doorway threshold.' },
+            { time: 'T + 0.0s', step: 'Safe Standoff Established', detail: 'Worker stepped back behind yellow clearance line; collision averted.' },
+          ]
+        }
+      };
+    } else if (scenarioStep === 5) {
+      return {
+        perception: {
+          target1: 'Forklift V01 (96% conf)',
+          target2: 'Worker P12 (93% conf)',
+          speed: '14.2 km/h (Emergency Decel)',
+          separation: '0.4 m (Halted Standoff)',
+          extraLabel: 'Interlock Status:',
+          extraValue: 'AUTONOMOUS E-BRAKE ENGAGED',
+        },
+        risk: {
+          timeToCollision: '0.3s — HALTED',
+          probability: '98.6% (Impact Imminent)',
+          trajectory: 'Direct Intercept Path',
+          safetyIndex: '0.04 / 1.0 (Critical)',
+          hazardLevel: 'CRITICAL CONFLICT',
+        },
+        response: {
+          kiosk: 'HIGH-DECIBEL KLAXON ACTIVE',
+          interlock: 'EMERGENCY BRAKE ENGAGED',
+          supervisor: 'Priority Escalation Dispatched',
+          incidentId: '#INC-CRASH-2026-05',
+        },
+        forensic: {
+          root_cause: 'Operator forward line-of-sight obstructed by elevated pallet load combined with delayed pedestrian recognition of vehicle approach path in active transit aisle.',
+          osha_regulation: 'OSHA Standard 1910.178(n)(6) & 1910.178(o)(1) - Safe Forklift Loading, Obstructed Forward Visibility & Autonomous Stop Interlocks.',
+          recommendations: 'Perform immediate mechanical and electronic lockout/tagout (LOTO) inspection on Forklift V01. Re-train material handling operators on mandatory reverse travel with high loads.',
+          timeline: [
+            { time: 'T - 4.1s', step: 'Trajectory Conflict Lock', detail: 'Eye-level and ceiling cameras detected Forklift V01 on direct intercept path with pedestrian.' },
+            { time: 'T - 2.8s', step: 'Hazard Escalation Alarm', detail: 'Time-to-impact calculated at < 2.0s; zone hazard level escalated to CRITICAL.' },
+            { time: 'T - 1.2s', step: 'Emergency Brake Broadcast', detail: 'Telemetry interlock command dispatched to vehicle; high-intensity strobe activated.' },
+            { time: 'T + 0.0s', step: 'Autonomous Interlock Halt', detail: 'Vehicle autonomous braking arrested momentum within 0.4m standoff of worker; impact averted.' },
+          ]
+        }
+      };
+    } else if (scenarioStep === 7) {
+      return {
+        perception: {
+          target1: 'Combustion Core (>68°C)',
+          target2: 'Smoke Dispersion Cloud',
+          speed: 'High Thermal Convection',
+          separation: 'Bay 4 Storage Racks',
+          extraLabel: 'Sensor Source:',
+          extraValue: 'Optical Thermal Camera (Ceiling)',
+        },
+        risk: {
+          timeToCollision: 'EVACUATE IMMEDIATELY',
+          probability: '100% Active Thermal Event',
+          trajectory: 'Radial Spread Across Bay 4',
+          safetyIndex: '0.00 / 1.0 (Emergency)',
+          hazardLevel: 'FIRE EMERGENCY',
+        },
+        response: {
+          kiosk: 'FACILITY-WIDE EVACUATION STROBE',
+          interlock: 'HVAC DAMPER SEALS CLOSED',
+          supervisor: 'Automated 911 Dispatch',
+          incidentId: '#INC-FIRE-2026-07',
+        },
+        forensic: {
+          root_cause: 'Thermal runaway or electrical short-circuit in adjacent palletized packaging materials generating rapid combustion and aerosolized smoke in high-density storage bay.',
+          osha_regulation: 'OSHA Standard 1910.36 & 1910.165 - Means of Egress, Emergency Action Plans and Industrial Employee Alarm Systems.',
+          recommendations: 'Complete immediate evacuation of all Sector B personnel through Emergency Exit 3. Deploy facility emergency response team and verify automated sprinkler actuation.',
+          timeline: [
+            { time: 'T - 6.0s', step: 'Thermal Plume Detected', detail: 'Optical thermal sensor on Ceiling Cam flagged rapid infrared expansion (>65°C) in Bay 4.' },
+            { time: 'T - 4.2s', step: 'Smoke Diffusion Verification', detail: 'Computer vision model verified smoke cloud propagation across ceiling rafters.' },
+            { time: 'T - 2.0s', step: 'Facility Emergency Strobe', detail: 'HAWK Safety Coordinator tripped emergency sirens, flashing strobes, and automated voice evacuation PA.' },
+            { time: 'T + 0.0s', step: 'Fire Suppression Interlock', detail: 'HVAC fire dampers sealed, emergency exit magnetic doors released, and emergency response dispatched.' },
+          ]
+        }
+      };
+    } else {
+      // Nearmiss / Proximity (Step 2 or 4)
+      return {
+        perception: {
+          target1: 'Forklift V01 (91% conf)',
+          target2: 'Worker P12 (87% conf)',
+          speed: '9.4 km/h (In-Transit)',
+          separation: '2.8 m (Closing)',
+          extraLabel: 'Spatial Envelope:',
+          extraValue: '1.5m Zone Perimeter Breach',
+        },
+        risk: {
+          timeToCollision: 'In ~ 4.2 seconds',
+          probability: '72.8%',
+          trajectory: 'Central Aisle Convergence',
+          safetyIndex: '0.35 / 1.0 (Caution)',
+          hazardLevel: 'MEDIUM RISK',
+        },
+        response: {
+          kiosk: 'PROXIMITY CHIME ACTIVE',
+          interlock: 'DECELERATION NOTICE SENT',
+          supervisor: 'Advisory Notification Sent',
+          incidentId: '#INC-PROX-2026-04',
+        },
+        forensic: {
+          root_cause: 'Shared pedestrian and powered industrial equipment corridor with partial sightline obstruction from stacked pallet shelving during active inventory sorting.',
+          osha_regulation: 'OSHA Standard 1910.178(m)(2) - Powered Industrial Trucks Clearance & Pedestrian Standoff in Shared Aisles.',
+          recommendations: 'Install wide-angle parabolic dome mirrors at Zone A/B portal entrance. Verify floor laser line projection defining pedestrian safe walking zones.',
+          timeline: [
+            { time: 'T - 5.0s', step: 'Trajectory Tracking', detail: 'Overhead Camera detected Forklift V01 advancing down central aisle with cargo.' },
+            { time: 'T - 3.4s', step: 'Spatial Convergence', detail: 'Distance vector to Worker P12 rapidly narrowed to less than 2.0 meters.' },
+            { time: 'T - 1.8s', step: 'Hazard Proximity Alert', detail: 'HAWK Safety Engine calculated near-miss probability; kiosk flashed caution strobe.' },
+            { time: 'T + 0.0s', step: 'Standoff Intervention', detail: 'Vehicle operator alerted via audio chime and reduced velocity; clearance restored.' },
+          ]
+        }
+      };
+    }
+  })();
+
+  const handleOpenAnalysis = async (incidentId: number = 1) => {
+    try {
+      const evParam = encodeURIComponent(currentIncident.title || '');
+      const res = await fetch(`/api/hawk/incidents/${incidentId}/analysis?event_type=${evParam}`);
+      if (res.ok) {
+        const data = await res.json();
+        setAnalysisModalIncident({
+          ...currentTelemetry.forensic,
+          ...data,
+          id: incidentId,
+        });
+      } else {
+        setAnalysisModalIncident({
+          id: incidentId,
+          ...currentTelemetry.forensic
+        });
+      }
+    } catch (e) {
+      console.warn('Failed to load incident analysis:', e);
+      setAnalysisModalIncident({
+        id: incidentId,
+        ...currentTelemetry.forensic
+      });
+    }
+  };
+
+  const currentNotifications = (() => {
+    if (scenarioStep === 1) {
+      return [
+        {
+          title: 'Missing PPE Incident Logged',
+          desc: 'Worker P12 non-compliance in Loading Zone (Zone B). Missing required Hard Hat & Safety Vest.',
+          time: 'Just now',
+          dotColor: '#f59e0b',
+          tag: 'POLICY BREACH',
+          tagBg: '#fef3c7',
+          tagColor: '#b45309',
+        },
+        {
+          title: 'Zone B Safety Kiosk Armed',
+          desc: 'Automated audible compliance reminder dispatched to Zone B doorway.',
+          time: '1m ago',
+          dotColor: '#38bdf8',
+          tag: 'KIOSK DIRECTIVE',
+          tagBg: '#e0f2fe',
+          tagColor: '#0284c7',
+        },
+        {
+          title: 'Camera 2 Calibration Nominal',
+          desc: 'High-speed 30 FPS MJPEG inference stream synchronized with YOLO PPE model.',
+          time: '12m ago',
+          dotColor: '#10b981',
+          tag: 'SYSTEM OK',
+          tagBg: '#dcfce7',
+          tagColor: '#15803d',
+        }
+      ];
+    } else if (scenarioStep === 3) {
+      return [
+        {
+          title: 'Inbound Machinery Detected Outside',
+          desc: 'Outside Camera A tracked Forklift V01 accelerating in transit toward entrance doorway.',
+          time: 'Just now',
+          dotColor: '#ea580c',
+          tag: 'TRANSIT WARNING',
+          tagBg: '#ffedd5',
+          tagColor: '#c2410c',
+        },
+        {
+          title: 'Doorway Standoff Alert Broadcast',
+          desc: 'Worker P12 warned at doorway threshold: move clear of approach apron.',
+          time: '30s ago',
+          dotColor: '#f59e0b',
+          tag: 'DOORWAY ALARM',
+          tagBg: '#fef3c7',
+          tagColor: '#b45309',
+        },
+        {
+          title: 'Cross-Camera Spatial Mesh Active',
+          desc: 'Telemetry trajectory shared between Cam 1 (Yard) and Cam 2 (Doorway).',
+          time: '2m ago',
+          dotColor: '#38bdf8',
+          tag: 'MESH SYNC',
+          tagBg: '#e0f2fe',
+          tagColor: '#0284c7',
+        }
+      ];
+    } else if (scenarioStep === 5) {
+      return [
+        {
+          title: 'CRITICAL: Autonomous E-Brake Engaged',
+          desc: 'Forklift V01 interlock arrested vehicle momentum 0.4m from pedestrian.',
+          time: 'Just now',
+          dotColor: '#ef4444',
+          tag: 'EMERGENCY HALT',
+          tagBg: '#fee2e2',
+          tagColor: '#dc2626',
+        },
+        {
+          title: 'Supervisor Priority Escalation Dispatched',
+          desc: 'High-decibel klaxon sounded; push alert sent to supervisor terminal.',
+          time: '15s ago',
+          dotColor: '#ef4444',
+          tag: 'CRITICAL DISPATCH',
+          tagBg: '#fee2e2',
+          tagColor: '#dc2626',
+        },
+        {
+          title: 'Forensic Video Capture Stored',
+          desc: '1080p dual-angle incident evidence clip archived to secure storage.',
+          time: '1m ago',
+          dotColor: '#38bdf8',
+          tag: 'EVIDENCE ARCHIVE',
+          tagBg: '#e0f2fe',
+          tagColor: '#0284c7',
+        }
+      ];
+    } else if (scenarioStep === 7) {
+      return [
+        {
+          title: 'FIRE EMERGENCY: Thermal Plume Detected',
+          desc: 'Ceiling infrared sensor flagged active combustion plume (>68°C) in Bay 4.',
+          time: 'Just now',
+          dotColor: '#ef4444',
+          tag: 'EVACUATION ALARM',
+          tagBg: '#fee2e2',
+          tagColor: '#dc2626',
+        },
+        {
+          title: 'HVAC Fire Dampers Sealed',
+          desc: 'Automated interlock sealed Zone B ventilation; emergency doors unlatched.',
+          time: '30s ago',
+          dotColor: '#ea580c',
+          tag: 'FACILITY INTERLOCK',
+          tagBg: '#ffedd5',
+          tagColor: '#c2410c',
+        },
+        {
+          title: 'Municipal 911 Dispatch Notified',
+          desc: 'Emergency services automated incident telemetry payload transmitted.',
+          time: '1m ago',
+          dotColor: '#ef4444',
+          tag: 'EMERGENCY 911',
+          tagBg: '#fee2e2',
+          tagColor: '#dc2626',
+        }
+      ];
+    } else {
+      return [
+        {
+          title: 'Vehicle-Person Proximity Alert',
+          desc: 'Separation distance narrowed to 2.8m in central aisle. Caution strobe fired.',
+          time: 'Just now',
+          dotColor: '#f59e0b',
+          tag: 'PROXIMITY WARNING',
+          tagBg: '#fef3c7',
+          tagColor: '#b45309',
+        },
+        {
+          title: 'Speed Governor Advisory Sent',
+          desc: 'Recommended maximum speed 8 km/h in Sector B loading aisle.',
+          time: '2m ago',
+          dotColor: '#38bdf8',
+          tag: 'SPEED ADVISORY',
+          tagBg: '#e0f2fe',
+          tagColor: '#0284c7',
+        },
+        {
+          title: 'Pedestrian Demarcation Verified',
+          desc: 'Floor projected laser walking boundary verified nominal.',
+          time: '5m ago',
+          dotColor: '#10b981',
+          tag: 'ZONE CLEAR',
+          tagBg: '#dcfce7',
+          tagColor: '#15803d',
+        }
+      ];
+    }
   })();
 
   // Dynamic Recent Alerts based on real events currently happening
@@ -712,7 +1064,7 @@ export function HawkDashboard({ onReplayIntro }: HawkDashboardProps = {}) {
       {/* TOP NAVIGATION BAR                                                */}
       {/* ================================================================= */}
       <header style={styles.navBar}>
-        {/* Left: Brand Logo + Site Selector */}
+        {/* Left: Brand Logo */}
         <div style={styles.navLeft}>
           {/* Stylized Hawk Logo */}
           <div style={styles.brandRow}>
@@ -730,16 +1082,6 @@ export function HawkDashboard({ onReplayIntro }: HawkDashboardProps = {}) {
             </div>
             <span style={styles.brandName}>HAWK</span>
             <span style={styles.brandTagline}>AI for a Safer Tomorrow</span>
-          </div>
-
-          {/* Location Selector Pill Card */}
-          <div style={styles.sitePill} onClick={() => setIsSiteDropdownOpen(!isSiteDropdownOpen)}>
-            <MapPin size={16} color="#1e3a8a" style={{ flexShrink: 0 }} />
-            <div style={styles.siteTextCol}>
-              <span style={styles.siteName}>Riverside Construction Site</span>
-              <span style={styles.siteSub}>Sector B • Main Facility</span>
-            </div>
-            <ChevronDown size={14} color="#64748b" />
           </div>
         </div>
 
@@ -827,39 +1169,25 @@ export function HawkDashboard({ onReplayIntro }: HawkDashboardProps = {}) {
                 <span style={{ fontWeight: 700 }}>Intro</span>
               </button>
             )}
+            {/* Siren Audio Toggle Button Aligned in the Scenario Utility Bar */}
             <button
               style={{
                 ...styles.scenarioUtilityBtn,
-                color: '#dc2626',
-                borderColor: '#fee2e2',
-                backgroundColor: '#fff5f5'
+                backgroundColor: soundEnabled ? '#eff6ff' : '#ffffff',
+                borderColor: soundEnabled ? '#bfdbfe' : '#e2e8f0',
+                color: soundEnabled ? '#1d4ed8' : '#64748b'
               }}
-              onClick={() => handleTriggerStep(5)}
-              title="Trigger Immediate Emergency Halt"
+              onClick={toggleSound}
+              title={soundEnabled ? 'Industrial Siren & Voice Dispatch: ACTIVE (Click to Mute)' : 'Alert Audio MUTED (Click to Enable)'}
             >
-              <Octagon size={12} color="#dc2626" />
-              <span style={{ fontWeight: 700 }}>HALT</span>
+              {soundEnabled ? <Volume2 size={12} color="#1d4ed8" /> : <VolumeX size={12} color="#64748b" />}
+              <span style={{ fontWeight: soundEnabled ? 700 : 500 }}>{soundEnabled ? 'Siren ON' : 'Muted'}</span>
             </button>
           </div>
         </div>
 
-        {/* Right: Sound, Weather, Time, Bell, User Profile */}
+        {/* Right: Weather, Time, Bell Popover, User Profile */}
         <div style={styles.navRight}>
-          {/* Siren Audio Toggle */}
-          <button
-            style={{
-              ...styles.soundToggleBtn,
-              backgroundColor: soundEnabled ? '#eff6ff' : '#f8fafc',
-              borderColor: soundEnabled ? '#bfdbfe' : '#e2e8f0',
-              color: soundEnabled ? '#1d4ed8' : '#94a3b8'
-            }}
-            onClick={toggleSound}
-            title={soundEnabled ? 'Industrial Siren & Spoken Dispatch: ACTIVE (Click to Mute)' : 'Alert Audio MUTED (Click to Enable)'}
-          >
-            {soundEnabled ? <Volume2 size={15} color="#1d4ed8" /> : <VolumeX size={15} color="#94a3b8" />}
-            <span style={{ fontSize: 11, fontWeight: 700 }}>{soundEnabled ? 'Siren ON' : 'Muted'}</span>
-          </button>
-
           {/* Weather Widget */}
           <div style={styles.weatherWidget}>
             <Sun size={18} color="#f59e0b" />
@@ -875,11 +1203,59 @@ export function HawkDashboard({ onReplayIntro }: HawkDashboardProps = {}) {
             <span style={styles.clockTime}>{currentTime}</span>
           </div>
 
-          {/* Notification Bell */}
-          <div style={styles.bellBtn} onClick={() => setNotificationCount(0)} title="Active Notifications">
-            <Bell size={18} color="#1e293b" />
-            {notificationCount > 0 && (
-              <div style={styles.bellBadge}>{notificationCount}</div>
+          {/* Notification Bell with Floating Popover */}
+          <div style={{ position: 'relative' }}>
+            <div
+              style={styles.bellBtn}
+              onClick={() => {
+                setIsNotificationOpen(prev => !prev);
+                setNotificationCount(0);
+              }}
+              title="Active Notifications"
+            >
+              <Bell size={18} color="#1e293b" />
+              {notificationCount > 0 && (
+                <div style={styles.bellBadge}>{notificationCount}</div>
+              )}
+            </div>
+
+            {isNotificationOpen && (
+              <div style={styles.notificationPopover}>
+                <div style={styles.notifHeader}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={styles.notifHeaderTitle}>Live Notifications</span>
+                    <span style={styles.notifCountBadge}>{currentNotifications.length} Active</span>
+                  </div>
+                  <button
+                    style={styles.notifClearBtn}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsNotificationOpen(false);
+                    }}
+                  >
+                    ✕ Close
+                  </button>
+                </div>
+                <div style={styles.notifList}>
+                  {currentNotifications.map((n, idx) => (
+                    <div key={idx} style={styles.notifItem}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                        <div style={{ ...styles.notifDot, backgroundColor: n.dotColor }} />
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
+                            <span style={styles.notifTitle}>{n.title}</span>
+                            <span style={styles.notifTime}>{n.time}</span>
+                          </div>
+                          <p style={styles.notifDesc}>{n.desc}</p>
+                          <span style={{ ...styles.notifTag, backgroundColor: n.tagBg, color: n.tagColor }}>
+                            {n.tag}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             )}
           </div>
 
@@ -1284,20 +1660,28 @@ export function HawkDashboard({ onReplayIntro }: HawkDashboardProps = {}) {
                 <h4 style={styles.telemetryCardTitle}>Perception Agent</h4>
                 <div style={styles.telemetryRow}>
                   <span style={styles.telemetryLabel}>Target 1:</span>
-                  <span style={styles.telemetryValue}>Forklift V01 (91% conf)</span>
+                  <span style={styles.telemetryValue}>{currentTelemetry.perception.target1}</span>
                 </div>
                 <div style={styles.telemetryRow}>
                   <span style={styles.telemetryLabel}>Target 2:</span>
-                  <span style={styles.telemetryValue}>Worker P12 (87% conf)</span>
+                  <span style={styles.telemetryValue}>{currentTelemetry.perception.target2}</span>
                 </div>
                 <div style={styles.telemetryRow}>
-                  <span style={styles.telemetryLabel}>Speed:</span>
-                  <span style={styles.telemetryValue}>14.2 km/h</span>
+                  <span style={styles.telemetryLabel}>Speed / Motion:</span>
+                  <span style={styles.telemetryValue}>{currentTelemetry.perception.speed}</span>
                 </div>
                 <div style={styles.telemetryRow}>
-                  <span style={styles.telemetryLabel}>Separation Distance:</span>
-                  <span style={styles.telemetryValue}>4.8 m (Closing)</span>
+                  <span style={styles.telemetryLabel}>Clearance / Envelope:</span>
+                  <span style={styles.telemetryValue}>{currentTelemetry.perception.separation}</span>
                 </div>
+                {currentTelemetry.perception.extraLabel && (
+                  <div style={styles.telemetryRow}>
+                    <span style={styles.telemetryLabel}>{currentTelemetry.perception.extraLabel}</span>
+                    <span style={{ ...styles.telemetryValue, color: '#b45309', fontWeight: 700 }}>
+                      {currentTelemetry.perception.extraValue}
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Risk Assessment Column */}
@@ -1305,19 +1689,23 @@ export function HawkDashboard({ onReplayIntro }: HawkDashboardProps = {}) {
                 <h4 style={styles.telemetryCardTitle}>Risk Assessment</h4>
                 <div style={styles.telemetryRow}>
                   <span style={styles.telemetryLabel}>Time-to-Collision:</span>
-                  <span style={{ ...styles.telemetryValue, color: '#dc2626', fontWeight: 800 }}>{currentIncident.etaPillText}</span>
+                  <span style={{ ...styles.telemetryValue, color: currentIncident.riskColor, fontWeight: 800 }}>
+                    {currentTelemetry.risk.timeToCollision}
+                  </span>
                 </div>
                 <div style={styles.telemetryRow}>
                   <span style={styles.telemetryLabel}>Conflict Probability:</span>
-                  <span style={{ ...styles.telemetryValue, color: '#dc2626' }}>94.2%</span>
+                  <span style={{ ...styles.telemetryValue, color: currentIncident.riskColor, fontWeight: 700 }}>
+                    {currentTelemetry.risk.probability}
+                  </span>
                 </div>
                 <div style={styles.telemetryRow}>
                   <span style={styles.telemetryLabel}>Predicted Trajectory:</span>
-                  <span style={styles.telemetryValue}>Zone A → Zone B Breach</span>
+                  <span style={styles.telemetryValue}>{currentTelemetry.risk.trajectory}</span>
                 </div>
                 <div style={styles.telemetryRow}>
                   <span style={styles.telemetryLabel}>Safety Index:</span>
-                  <span style={styles.telemetryValue}>0.18 / 1.0</span>
+                  <span style={styles.telemetryValue}>{currentTelemetry.risk.safetyIndex}</span>
                 </div>
               </div>
 
@@ -1326,25 +1714,37 @@ export function HawkDashboard({ onReplayIntro }: HawkDashboardProps = {}) {
                 <h4 style={styles.telemetryCardTitle}>Response Agent</h4>
                 <div style={styles.telemetryRow}>
                   <span style={styles.telemetryLabel}>Kiosk Audio Strobe:</span>
-                  <span style={{ ...styles.telemetryValue, color: '#16a34a' }}>DISPATCHED</span>
+                  <span style={{
+                    ...styles.telemetryValue,
+                    color: currentTelemetry.response.kiosk.includes('ACTIVE') || currentTelemetry.response.kiosk.includes('BROADCAST') || currentTelemetry.response.kiosk.includes('ARMED') ? '#b45309' : '#16a34a',
+                    fontWeight: 700
+                  }}>
+                    {currentTelemetry.response.kiosk}
+                  </span>
                 </div>
                 <div style={styles.telemetryRow}>
                   <span style={styles.telemetryLabel}>Forklift Interlock:</span>
-                  <span style={{ ...styles.telemetryValue, color: '#dc2626' }}>EMERGENCY BRAKE ENGAGED</span>
+                  <span style={{
+                    ...styles.telemetryValue,
+                    color: currentTelemetry.response.interlock.includes('EMERGENCY') ? '#dc2626' : '#2563eb',
+                    fontWeight: 700
+                  }}>
+                    {currentTelemetry.response.interlock}
+                  </span>
                 </div>
                 <div style={styles.telemetryRow}>
                   <span style={styles.telemetryLabel}>Supervisor Alert:</span>
-                  <span style={styles.telemetryValue}>Push Notification Sent</span>
+                  <span style={styles.telemetryValue}>{currentTelemetry.response.supervisor}</span>
                 </div>
                 <div style={styles.telemetryRow}>
                   <span style={styles.telemetryLabel}>Incident ID:</span>
-                  <span style={styles.telemetryValue}>#INC-2026-0905-01</span>
+                  <span style={{ ...styles.telemetryValue, fontWeight: 700 }}>{currentTelemetry.response.incidentId}</span>
                 </div>
               </div>
             </div>
 
             <div style={styles.modalFooterRow}>
-              <button style={styles.modalSecondaryBtn} onClick={() => handleOpenAnalysis(1)}>
+              <button style={styles.modalSecondaryBtn} onClick={() => handleOpenAnalysis(scenarioStep)}>
                 <FileText size={15} color="#1e3a8a" />
                 <span>Open Full LLM Forensic Report</span>
               </button>
@@ -1421,7 +1821,9 @@ export function HawkDashboard({ onReplayIntro }: HawkDashboardProps = {}) {
             <div style={styles.modalHeaderRow}>
               <div>
                 <h3 style={styles.modalHeading}>LLM Incident Forensic Investigation</h3>
-                <p style={styles.modalSubheading}>Multi-Agent reasoning log for Incident #{analysisModalIncident.id}</p>
+                <p style={styles.modalSubheading}>
+                  Multi-Agent reasoning log for Incident {analysisModalIncident.incidentId || currentTelemetry.response.incidentId}
+                </p>
               </div>
               <button style={styles.modalCloseBtn} onClick={() => setAnalysisModalIncident(null)}>
                 <X size={18} color="#64748b" />
@@ -1432,23 +1834,53 @@ export function HawkDashboard({ onReplayIntro }: HawkDashboardProps = {}) {
               <div style={styles.telemetryCard}>
                 <h4 style={styles.telemetryCardTitle}>Perception Agent Root Cause</h4>
                 <p style={{ fontSize: 13, color: '#334155', lineHeight: 1.6 }}>
-                  {analysisModalIncident.root_cause || 'Vehicle V01 entered Zone B without stopping at yellow demarcation line. Pedestrian P12 had back turned toward the inbound aisle.'}
+                  {analysisModalIncident.root_cause || currentTelemetry.forensic.root_cause}
                 </p>
               </div>
 
               <div style={{ ...styles.telemetryCard, marginTop: 12 }}>
                 <h4 style={styles.telemetryCardTitle}>OSHA / Regulatory Safety Impact</h4>
                 <p style={{ fontSize: 13, color: '#334155', lineHeight: 1.6 }}>
-                  {analysisModalIncident.regulatory_impact || 'Potential violation of OSHA 1910.178(m)(2) regarding safe clearance distances and right-of-way in blind aisle intersections.'}
+                  {analysisModalIncident.osha_regulation || analysisModalIncident.regulatory_impact || currentTelemetry.forensic.osha_regulation}
                 </p>
               </div>
 
               <div style={{ ...styles.telemetryCard, marginTop: 12 }}>
                 <h4 style={styles.telemetryCardTitle}>Preventative Recommendations</h4>
                 <p style={{ fontSize: 13, color: '#334155', lineHeight: 1.6 }}>
-                  {analysisModalIncident.recommendations || 'Install additional HAWK Zone Kiosk visual strobe at blind corner. Mandate speed governor threshold 8 km/h in Sector B.'}
+                  {Array.isArray(analysisModalIncident.corrective_actions)
+                    ? analysisModalIncident.corrective_actions.join(' ')
+                    : (analysisModalIncident.recommendations || currentTelemetry.forensic.recommendations)}
                 </p>
               </div>
+
+              {/* Multi-Agent Collaborative Timeline */}
+              {(analysisModalIncident.timeline || currentTelemetry.forensic.timeline) && (
+                <div style={{ ...styles.telemetryCard, marginTop: 12 }}>
+                  <h4 style={styles.telemetryCardTitle}>Multi-Agent Collaborative Timeline</h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
+                    {(analysisModalIncident.timeline || currentTelemetry.forensic.timeline).map((stepItem: any, sIdx: number) => (
+                      <div key={sIdx} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 12 }}>
+                        <span style={{
+                          padding: '2px 8px',
+                          borderRadius: '6px',
+                          backgroundColor: '#e0f2fe',
+                          color: '#0369a1',
+                          fontWeight: 700,
+                          fontSize: 11,
+                          flexShrink: 0
+                        }}>
+                          {stepItem.time}
+                        </span>
+                        <div>
+                          <strong style={{ color: '#0f172a' }}>{stepItem.step}: </strong>
+                          <span style={{ color: '#475569', lineHeight: 1.5 }}>{stepItem.detail}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div style={styles.modalFooterRow}>
@@ -1685,6 +2117,87 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     justifyContent: 'center',
     border: '2px solid #ffffff',
+  },
+  notificationPopover: {
+    position: 'absolute',
+    top: '46px',
+    right: 0,
+    width: '360px',
+    backgroundColor: '#ffffff',
+    borderRadius: '16px',
+    boxShadow: '0 12px 36px rgba(15, 23, 42, 0.16), 0 2px 8px rgba(15, 23, 42, 0.08)',
+    border: '1px solid #e2e8f0',
+    zIndex: 100,
+    overflow: 'hidden',
+  },
+  notifHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '12px 16px',
+    backgroundColor: '#f8fafc',
+    borderBottom: '1px solid #e2e8f0',
+  },
+  notifHeaderTitle: {
+    fontSize: '13px',
+    fontWeight: 700,
+    color: '#0f172a',
+  },
+  notifCountBadge: {
+    fontSize: '10px',
+    fontWeight: 700,
+    padding: '2px 8px',
+    borderRadius: '12px',
+    backgroundColor: '#dbeafe',
+    color: '#1d4ed8',
+  },
+  notifClearBtn: {
+    fontSize: '11px',
+    fontWeight: 600,
+    color: '#64748b',
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+  },
+  notifList: {
+    maxHeight: '340px',
+    overflowY: 'auto',
+    padding: '4px 0',
+  },
+  notifItem: {
+    padding: '10px 16px',
+    borderBottom: '1px solid #f1f5f9',
+  },
+  notifDot: {
+    width: '8px',
+    height: '8px',
+    borderRadius: '50%',
+    marginTop: '5px',
+    flexShrink: 0,
+  },
+  notifTitle: {
+    fontSize: '12px',
+    fontWeight: 700,
+    color: '#0f172a',
+  },
+  notifTime: {
+    fontSize: '10px',
+    color: '#94a3b8',
+    whiteSpace: 'nowrap',
+  },
+  notifDesc: {
+    fontSize: '11px',
+    color: '#475569',
+    margin: '3px 0 6px 0',
+    lineHeight: '1.4',
+  },
+  notifTag: {
+    fontSize: '9px',
+    fontWeight: 700,
+    padding: '2px 6px',
+    borderRadius: '4px',
+    display: 'inline-block',
+    letterSpacing: '0.3px',
   },
   userCard: {
     display: 'flex',

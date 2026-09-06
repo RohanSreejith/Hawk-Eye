@@ -116,12 +116,12 @@ class HawkEngine:
         ]
 
         self.safety_kiosk: Dict[str, Any] = {
-            "active": False,
+            "active": True,
             "zone": "Zone B",
-            "title": "ALL CLEAR",
-            "message": "Zone B monitoring active - No hazards detected",
-            "subtext": "Normal Operations",
-            "severity": "safe",
+            "title": "ACTIVE PPE ALERT",
+            "message": "Worker P12 missing required Helmet & Safety Vest in Zone B!",
+            "subtext": "MANDATORY SAFETY GEAR REQUIRED • SECURE HEAD & BODY PROTECTION",
+            "severity": "warning",
             "timestamp": "10:24:00"
         }
 
@@ -497,25 +497,34 @@ class HawkEngine:
 
         if step == 1:
             self.risk_assessment = {
-                "vehicle_worker_proximity": "Clear (>8m)",
-                "proximity_status": "safe",
-                "trajectory_analysis": "Normal Warehouse Operations",
-                "zone_conflict": "None",
-                "conflict_status": "safe",
-                "overall_risk": "LOW",
-                "risk_level": "low",
-                "risk_score": 12
+                "vehicle_worker_proximity": "Stationary clearance (0.6m)",
+                "proximity_status": "caution",
+                "trajectory_analysis": "Active Policy Non-Compliance",
+                "zone_conflict": "PPE Breach in Zone B",
+                "conflict_status": "warning",
+                "overall_risk": "MEDIUM",
+                "risk_level": "medium",
+                "risk_score": 58
             }
             self.safety_kiosk = {
-                "active": False,
+                "active": True,
                 "zone": "Zone B",
-                "title": "ALL CLEAR",
-                "message": "Zone B monitoring active - No hazards detected",
-                "subtext": "Normal Operations",
-                "severity": "safe",
+                "title": "ACTIVE PPE ALERT",
+                "message": "Worker P12 missing required Helmet & Safety Vest in Zone B!",
+                "subtext": "MANDATORY SAFETY GEAR REQUIRED • SECURE HEAD & BODY PROTECTION",
+                "severity": "warning",
                 "timestamp": now
             }
-            self.active_events = []
+            self.active_events = [
+                {
+                    "id": "EVT-PPE-01",
+                    "title": "Missing Helmet & Safety Vest in Zone B",
+                    "zone": "Zone B (Loading Area)",
+                    "severity": "warning",
+                    "time": now,
+                    "description": "Worker P12 detected in Loading Zone (Zone B) without required Hard Hat & Safety Vest. Stationary Forklift #01 parked with 0.6m clearance."
+                }
+            ]
             self.known_entities = [
                 {"id": "P04", "name": "Worker P04", "type": "worker", "status": "Moving Cargo",
                  "color": "#10b981", "location": "Zone A (Entrance)", "confidence": 0.88},
