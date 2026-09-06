@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Eye, Shield, Cpu, Activity, CheckCircle2, ChevronRight, Zap } from 'lucide-react';
+import { Eye, Shield, Cpu, Activity, CheckCircle2, ChevronRight, Sparkles } from 'lucide-react';
 
 interface WelcomeIntroProps {
   onComplete: () => void;
@@ -12,14 +12,14 @@ export const WelcomeIntro: React.FC<WelcomeIntroProps> = ({ onComplete }) => {
   const hasFinishedRef = useRef(false);
 
   const bootMessages = [
-    { text: 'Connecting Spatial Coordinate Mesh...', icon: Cpu },
-    { text: 'Syncing Multi-Camera Vision Agents (CAM 1 & CAM 2)...', icon: Eye },
-    { text: 'Arming OSHA Safety Compliance Engine...', icon: Shield },
+    { text: 'Connecting Spatial Coordinate Mesh (Cam 1 ↔ Cam 2)...', icon: Cpu },
+    { text: 'Syncing Multi-Camera Vision Agents & YOLO PPE Model...', icon: Eye },
+    { text: 'Arming Autonomous Braking & Acoustic Standoff Interlocks...', icon: Shield },
     { text: 'Calibrating Real-Time Hazard Anticipation Network...', icon: Activity },
-    { text: 'HAWK-EYE Autonomous Defense Grid Operational', icon: CheckCircle2 },
+    { text: 'HAWK AI Operations Grid Online & Fully Synchronized', icon: CheckCircle2 },
   ];
 
-  // Play a soft high-tech cyber chime via Web Audio API
+  // Soft high-fidelity activation chime using Web Audio API
   const playActivationChime = () => {
     try {
       const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
@@ -35,13 +35,13 @@ export const WelcomeIntro: React.FC<WelcomeIntroProps> = ({ onComplete }) => {
       osc.frequency.exponentialRampToValueAtTime(1174.66, ctx.currentTime + 0.3); // D6
 
       gain.gain.setValueAtTime(0.001, ctx.currentTime);
-      gain.gain.linearRampToValueAtTime(0.12, ctx.currentTime + 0.05);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+      gain.gain.linearRampToValueAtTime(0.14, ctx.currentTime + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.55);
 
       osc.connect(gain);
       gain.connect(ctx.destination);
       osc.start();
-      osc.stop(ctx.currentTime + 0.65);
+      osc.stop(ctx.currentTime + 0.6);
     } catch (_) {}
   };
 
@@ -52,11 +52,10 @@ export const WelcomeIntro: React.FC<WelcomeIntroProps> = ({ onComplete }) => {
     setIsFadingOut(true);
     setTimeout(() => {
       onComplete();
-    }, 550);
+    }, 450);
   };
 
   useEffect(() => {
-    // Keyboard listener to skip with Escape or Space
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' || e.key === ' ' || e.key === 'Enter') {
         finishIntro();
@@ -67,7 +66,7 @@ export const WelcomeIntro: React.FC<WelcomeIntroProps> = ({ onComplete }) => {
   }, []);
 
   useEffect(() => {
-    const totalDuration = 2400; // 2.4 seconds for a snappy, impressive feel
+    const totalDuration = 2400; // 2.4 seconds
     const intervalMs = 25;
     const increment = 100 / (totalDuration / intervalMs);
 
@@ -76,7 +75,7 @@ export const WelcomeIntro: React.FC<WelcomeIntroProps> = ({ onComplete }) => {
         const next = prev + increment;
         if (next >= 100) {
           clearInterval(timer);
-          setTimeout(() => finishIntro(), 250);
+          setTimeout(() => finishIntro(), 200);
           return 100;
         }
         return next;
@@ -98,111 +97,143 @@ export const WelcomeIntro: React.FC<WelcomeIntroProps> = ({ onComplete }) => {
       style={{
         ...styles.overlay,
         opacity: isFadingOut ? 0 : 1,
-        transform: isFadingOut ? 'scale(1.04)' : 'scale(1)',
+        transform: isFadingOut ? 'scale(1.02)' : 'scale(1)',
         pointerEvents: isFadingOut ? 'none' : 'auto',
       }}
+      onClick={finishIntro}
     >
       <style>{`
-        @keyframes radarSweep {
+        @keyframes orbitSpin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
         }
-        @keyframes pulseAperture {
-          0%, 100% { transform: scale(1); opacity: 0.85; filter: drop-shadow(0 0 16px rgba(56, 189, 248, 0.6)); }
-          50% { transform: scale(1.06); opacity: 1; filter: drop-shadow(0 0 32px rgba(56, 189, 248, 0.95)); }
-        }
-        @keyframes ringSpinRev {
+        @keyframes orbitSpinRev {
           0% { transform: rotate(360deg); }
           100% { transform: rotate(0deg); }
         }
-        @keyframes scanline {
-          0% { transform: translateY(-100%); }
-          100% { transform: translateY(1000%); }
+        @keyframes hawkGlowPulse {
+          0%, 100% { transform: scale(1); box-shadow: 0 10px 28px rgba(30, 58, 138, 0.12); }
+          50% { transform: scale(1.04); box-shadow: 0 14px 36px rgba(59, 130, 246, 0.22); }
         }
-        @keyframes badgeGlow {
-          0%, 100% { box-shadow: 0 0 12px rgba(56, 189, 248, 0.3); }
-          50% { box-shadow: 0 0 24px rgba(56, 189, 248, 0.7); }
+        @keyframes greenPulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.5; transform: scale(1.15); }
         }
       `}</style>
 
-      {/* Cyber Grid Background */}
-      <div style={styles.gridBg} />
+      {/* Ambient Radial Background */}
+      <div style={styles.ambientTop} />
+      <div style={styles.ambientBottom} />
 
-      {/* Ambient Lighting Cones */}
-      <div style={styles.glowOrbTop} />
-      <div style={styles.glowOrbBottom} />
-
-      {/* Top Bar with Skip Button */}
+      {/* Top Header Row with System Badge and Skip Button */}
       <div style={styles.topBar}>
         <div style={styles.liveBadge}>
           <span style={styles.liveDot} />
-          <span style={styles.liveText}>SYSTEM INITIALIZATION // V2.0</span>
+          <span style={styles.liveText}>SYSTEM INITIALIZATION // ALL SENSORS ONLINE</span>
         </div>
-        <button style={styles.skipBtn} onClick={finishIntro} title="Skip to Dashboard (ESC)">
-          <span>Skip Intro</span>
-          <ChevronRight size={14} color="#94a3b8" />
+        <button
+          style={styles.skipBtn}
+          onClick={(e) => {
+            e.stopPropagation();
+            finishIntro();
+          }}
+          title="Skip to Dashboard (ESC)"
+        >
+          <span>Skip to Dashboard</span>
+          <ChevronRight size={14} color="#64748b" />
         </button>
       </div>
 
-      {/* Central Content */}
-      <div style={styles.centerContainer}>
-        {/* Holographic Radar / Eye Aperture */}
-        <div style={styles.apertureContainer}>
-          {/* Outer Ring */}
+      {/* Central Hero Container */}
+      <div style={styles.centerContainer} onClick={(e) => e.stopPropagation()}>
+        {/* Animated Brand Emblem */}
+        <div style={styles.emblemWrapper}>
           <div style={styles.outerRing} />
-          {/* Reverse Orbit Ring */}
-          <div style={styles.revRing} />
-          {/* Radar Scanner Line */}
-          <div style={styles.radarNeedle} />
-          {/* Core Glowing Emblem */}
-          <div style={styles.coreEmblem}>
-            <Eye size={42} color="#38bdf8" strokeWidth={2.2} />
+          <div style={styles.innerRing} />
+          <div style={styles.emblemCard}>
+            <svg width="44" height="44" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M4 14C8 14 12 11 15 7C17 4 20 2 24 2C22 7 24 10 28 13C25 15 22 17 21 21C20 25 18 29 14 30C15 26 14 23 11 20C8 18 5 17 4 14Z"
+                fill="#1e3a8a"
+              />
+              <path
+                d="M15 7C17 11 21 13 25 14C21 16 19 19 18 23C16 19 14 16 10 15C12 12 13 9 15 7Z"
+                fill="#3b82f6"
+              />
+            </svg>
           </div>
         </div>
 
-        {/* Brand Title */}
+        {/* Brand Typography */}
         <div style={styles.brandBox}>
-          <div style={styles.titleRow}>
-            <span style={styles.titlePrefix}>HAWK</span>
-            <span style={styles.titleHyphen}>-</span>
-            <span style={styles.titleSuffix}>EYE</span>
+          <div style={styles.brandTitleRow}>
+            <span style={styles.brandName}>HAWK</span>
+            <div style={styles.taglinePill}>
+              <Sparkles size={11} color="#0284c7" style={{ marginRight: 4 }} />
+              <span>AI for a Safer Tomorrow</span>
+            </div>
           </div>
-          <div style={styles.brandBadge}>
-            <Zap size={11} color="#38bdf8" style={{ marginRight: 5 }} />
-            <span>AUTONOMOUS MULTI-CAMERA INCIDENT INTELLIGENCE</span>
-          </div>
+          <p style={styles.brandSub}>Autonomous Multi-Agent Workplace Safety & Risk Anticipation</p>
         </div>
 
-        {/* Futuristic Telemetry Log Terminal */}
-        <div style={styles.terminalCard}>
-          <div style={styles.terminalHeader}>
-            <span style={styles.termDotRed} />
-            <span style={styles.termDotYellow} />
-            <span style={styles.termDotGreen} />
-            <span style={styles.termTitle}>HAWK PERCEPTION BOOT SEQUENCE</span>
+        {/* Sequence Status Card */}
+        <div style={styles.sequenceCard}>
+          <div style={styles.sequenceHeader}>
+            <div style={styles.headerDotCol}>
+              <span style={{ ...styles.headerDot, backgroundColor: '#cbd5e1' }} />
+              <span style={{ ...styles.headerDot, backgroundColor: '#94a3b8' }} />
+              <span style={{ ...styles.headerDot, backgroundColor: '#3b82f6' }} />
+            </div>
+            <span style={styles.sequenceTitle}>MULTI-AGENT BOOT TELEMETRY</span>
           </div>
-          <div style={styles.terminalBody}>
+
+          <div style={styles.sequenceBody}>
             {bootMessages.map((item, index) => {
               const Icon = item.icon;
               const isPassed = index <= bootStep;
               const isCurrent = index === bootStep;
+
               return (
                 <div
                   key={index}
                   style={{
-                    ...styles.terminalRow,
-                    opacity: isPassed ? 1 : 0.25,
-                    color: isCurrent ? '#38bdf8' : isPassed ? '#cbd5e1' : '#475569',
+                    ...styles.sequenceRow,
+                    backgroundColor: isCurrent ? '#f0f9ff' : isPassed ? '#f8fafc' : 'transparent',
+                    border: isCurrent ? '1px solid #bae6fd' : '1px solid transparent',
+                    opacity: isPassed ? 1 : 0.35,
                   }}
                 >
-                  <Icon
-                    size={14}
-                    color={isCurrent ? '#38bdf8' : isPassed ? '#10b981' : '#475569'}
-                    style={{ marginRight: 8, flexShrink: 0 }}
-                  />
-                  <span style={styles.terminalText}>{item.text}</span>
+                  <div
+                    style={{
+                      ...styles.rowIconWrapper,
+                      backgroundColor: isCurrent ? '#e0f2fe' : isPassed ? '#dcfce7' : '#f1f5f9',
+                    }}
+                  >
+                    <Icon
+                      size={14}
+                      color={isCurrent ? '#0284c7' : isPassed ? '#16a34a' : '#94a3b8'}
+                    />
+                  </div>
+                  <span
+                    style={{
+                      ...styles.rowText,
+                      color: isCurrent ? '#0369a1' : isPassed ? '#1e293b' : '#64748b',
+                      fontWeight: isCurrent ? 700 : isPassed ? 600 : 500,
+                    }}
+                  >
+                    {item.text}
+                  </span>
                   {isPassed && (
-                    <span style={styles.termOkBadge}>{index === 4 ? 'READY' : 'OK'}</span>
+                    <span
+                      style={{
+                        ...styles.statusBadge,
+                        backgroundColor: index === 4 ? '#dbeafe' : '#dcfce7',
+                        color: index === 4 ? '#1d4ed8' : '#15803d',
+                        borderColor: index === 4 ? '#bfdbfe' : '#bbf7d0',
+                      }}
+                    >
+                      {index === 4 ? 'READY' : 'OK'}
+                    </span>
                   )}
                 </div>
               );
@@ -210,11 +241,11 @@ export const WelcomeIntro: React.FC<WelcomeIntroProps> = ({ onComplete }) => {
           </div>
         </div>
 
-        {/* Progress Bar and Indicator */}
-        <div style={styles.progressSection}>
-          <div style={styles.progressInfoRow}>
+        {/* Progress Bar Container */}
+        <div style={styles.progressCard}>
+          <div style={styles.progressMeta}>
             <span style={styles.progressLabel}>
-              {progress < 100 ? 'CONNECTING ACTIVE SAFETY SENSORS' : 'ALL PERIMETER DEFENSE ZONES ACTIVE'}
+              {progress < 100 ? 'SYNCHRONIZING SAFETY NETWORK' : 'ALL SYSTEMS FULLY OPERATIONAL'}
             </span>
             <span style={styles.progressPct}>{Math.min(100, Math.floor(progress))}%</span>
           </div>
@@ -229,9 +260,9 @@ export const WelcomeIntro: React.FC<WelcomeIntroProps> = ({ onComplete }) => {
         </div>
       </div>
 
-      {/* Bottom Footer Info */}
+      {/* Footer Helper Note */}
       <div style={styles.footerNote}>
-        <span>PRESS <kbd style={styles.kbd}>ESC</kbd> OR CLICK ANYWHERE TO ENTER DIRECTLY</span>
+        <span>PRESS <kbd style={styles.kbd}>ESC</kbd> OR CLICK TO PROCEED TO DASHBOARD</span>
       </div>
     </div>
   );
@@ -245,7 +276,7 @@ const styles: Record<string, React.CSSProperties> = {
     width: '100vw',
     height: '100vh',
     zIndex: 99999,
-    backgroundColor: '#020617',
+    backgroundColor: '#f0f4f9',
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'space-between',
@@ -253,42 +284,29 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '24px 32px',
     boxSizing: 'border-box',
     overflow: 'hidden',
-    transition: 'opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
+    transition: 'opacity 0.45s ease, transform 0.45s ease',
     cursor: 'pointer',
-    fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif",
+    fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
   },
-  gridBg: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundImage: `
-      linear-gradient(to right, rgba(56, 189, 248, 0.05) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(56, 189, 248, 0.05) 1px, transparent 1px)
-    `,
-    backgroundSize: '48px 48px',
-    pointerEvents: 'none',
-  },
-  glowOrbTop: {
+  ambientTop: {
     position: 'absolute',
     top: '-15%',
     left: '50%',
     transform: 'translateX(-50%)',
-    width: '600px',
-    height: '600px',
-    background: 'radial-gradient(circle, rgba(37, 99, 235, 0.22) 0%, rgba(56, 189, 248, 0.08) 40%, transparent 70%)',
+    width: '650px',
+    height: '450px',
+    background: 'radial-gradient(circle, rgba(59, 130, 246, 0.12) 0%, rgba(30, 58, 138, 0.04) 50%, transparent 70%)',
     pointerEvents: 'none',
-    filter: 'blur(40px)',
+    filter: 'blur(50px)',
   },
-  glowOrbBottom: {
+  ambientBottom: {
     position: 'absolute',
-    bottom: '-20%',
+    bottom: '-15%',
     left: '50%',
     transform: 'translateX(-50%)',
-    width: '700px',
-    height: '500px',
-    background: 'radial-gradient(circle, rgba(14, 165, 233, 0.15) 0%, transparent 65%)',
+    width: '600px',
+    height: '400px',
+    background: 'radial-gradient(circle, rgba(14, 165, 233, 0.08) 0%, transparent 65%)',
     pointerEvents: 'none',
     filter: 'blur(50px)',
   },
@@ -304,38 +322,40 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: 'rgba(15, 23, 42, 0.75)',
-    border: '1px solid rgba(56, 189, 248, 0.25)',
+    backgroundColor: '#ffffff',
+    border: '1px solid #e2e8f0',
     borderRadius: '20px',
     padding: '6px 14px',
-    backdropFilter: 'blur(8px)',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
   },
   liveDot: {
     width: 7,
     height: 7,
     borderRadius: '50%',
-    backgroundColor: '#38bdf8',
-    boxShadow: '0 0 8px #38bdf8',
+    backgroundColor: '#10b981',
+    boxShadow: '0 0 8px rgba(16, 185, 129, 0.7)',
+    animation: 'greenPulse 1.8s infinite',
   },
   liveText: {
-    color: '#94a3b8',
+    color: '#475569',
     fontSize: 11,
     fontWeight: 700,
-    letterSpacing: '1px',
+    letterSpacing: '0.6px',
   },
   skipBtn: {
     display: 'flex',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(15, 23, 42, 0.75)',
-    border: '1px solid rgba(148, 163, 184, 0.2)',
+    backgroundColor: '#ffffff',
+    border: '1px solid #e2e8f0',
     borderRadius: '20px',
     padding: '6px 14px',
-    color: '#94a3b8',
+    color: '#475569',
     fontSize: 12,
     fontWeight: 600,
     cursor: 'pointer',
-    transition: 'all 0.2s ease',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
+    transition: 'all 0.15s ease',
   },
   centerContainer: {
     display: 'flex',
@@ -343,216 +363,198 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     zIndex: 10,
     width: '100%',
-    maxWidth: '560px',
+    maxWidth: '520px',
+    cursor: 'default',
   },
-  apertureContainer: {
+  emblemWrapper: {
     position: 'relative',
-    width: '124px',
-    height: '124px',
-    marginBottom: '28px',
+    width: '104px',
+    height: '104px',
+    marginBottom: '20px',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
   },
   outerRing: {
     position: 'absolute',
-    width: '120px',
-    height: '120px',
+    width: '102px',
+    height: '102px',
     borderRadius: '50%',
-    border: '2px dashed rgba(56, 189, 248, 0.45)',
-    animation: 'radarSweep 12s linear infinite',
+    border: '2px dashed #bfdbfe',
+    animation: 'orbitSpin 16s linear infinite',
   },
-  revRing: {
+  innerRing: {
     position: 'absolute',
-    width: '100px',
-    height: '100px',
+    width: '86px',
+    height: '86px',
     borderRadius: '50%',
-    border: '1px solid rgba(14, 165, 233, 0.35)',
-    borderTopColor: '#38bdf8',
-    borderRightColor: 'transparent',
-    animation: 'ringSpinRev 5s linear infinite',
+    border: '1px solid #e2e8f0',
+    borderTopColor: '#3b82f6',
+    animation: 'orbitSpinRev 6s linear infinite',
   },
-  radarNeedle: {
-    position: 'absolute',
-    width: '120px',
-    height: '120px',
-    borderRadius: '50%',
-    background: 'conic-gradient(from 0deg, rgba(56, 189, 248, 0.25) 0deg, transparent 60deg, transparent 360deg)',
-    animation: 'radarSweep 3s linear infinite',
-  },
-  coreEmblem: {
-    width: '74px',
-    height: '74px',
-    borderRadius: '50%',
-    backgroundColor: 'rgba(15, 23, 42, 0.85)',
-    border: '2px solid #38bdf8',
+  emblemCard: {
+    width: '70px',
+    height: '70px',
+    borderRadius: '20px',
+    backgroundColor: '#ffffff',
+    border: '1px solid #e2e8f0',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    animation: 'pulseAperture 3s ease-in-out infinite',
-    boxShadow: '0 0 24px rgba(56, 189, 248, 0.5)',
+    boxShadow: '0 10px 24px rgba(30, 58, 138, 0.12)',
+    animation: 'hawkGlowPulse 3s ease-in-out infinite',
   },
   brandBox: {
     textAlign: 'center',
-    marginBottom: '24px',
+    marginBottom: '22px',
   },
-  titleRow: {
+  brandTitleRow: {
     display: 'flex',
+    alignItems: 'center',
     justifyContent: 'center',
-    alignItems: 'center',
-    gap: 4,
-    fontSize: 38,
+    gap: 10,
+  },
+  brandName: {
+    fontSize: '34px',
     fontWeight: 900,
-    letterSpacing: '3px',
-    lineHeight: 1.1,
+    color: '#0f172a',
+    letterSpacing: '-0.6px',
   },
-  titlePrefix: {
-    color: '#ffffff',
-  },
-  titleHyphen: {
-    color: '#38bdf8',
-  },
-  titleSuffix: {
-    background: 'linear-gradient(135deg, #38bdf8 0%, #60a5fa 100%)',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
-  },
-  brandBadge: {
-    marginTop: 8,
-    display: 'inline-flex',
-    alignItems: 'center',
-    backgroundColor: 'rgba(56, 189, 248, 0.1)',
-    border: '1px solid rgba(56, 189, 248, 0.3)',
-    borderRadius: '6px',
-    padding: '4px 12px',
-    fontSize: 10,
-    fontWeight: 800,
-    letterSpacing: '1.4px',
-    color: '#38bdf8',
-  },
-  terminalCard: {
-    width: '100%',
-    backgroundColor: 'rgba(15, 23, 42, 0.75)',
-    border: '1px solid rgba(56, 189, 248, 0.2)',
-    borderRadius: '12px',
-    overflow: 'hidden',
-    backdropFilter: 'blur(12px)',
-    marginBottom: '24px',
-    boxShadow: '0 10px 30px -5px rgba(0, 0, 0, 0.5)',
-  },
-  terminalHeader: {
+  taglinePill: {
     display: 'flex',
     alignItems: 'center',
-    padding: '8px 12px',
-    backgroundColor: 'rgba(2, 6, 23, 0.65)',
-    borderBottom: '1px solid rgba(56, 189, 248, 0.15)',
-    gap: 6,
-  },
-  termDotRed: {
-    width: 8,
-    height: 8,
-    borderRadius: '50%',
-    backgroundColor: '#ef4444',
-  },
-  termDotYellow: {
-    width: 8,
-    height: 8,
-    borderRadius: '50%',
-    backgroundColor: '#f59e0b',
-  },
-  termDotGreen: {
-    width: 8,
-    height: 8,
-    borderRadius: '50%',
-    backgroundColor: '#10b981',
-  },
-  termTitle: {
-    marginLeft: 8,
-    fontSize: 10,
+    backgroundColor: '#f0f9ff',
+    border: '1px solid #bae6fd',
+    borderRadius: '16px',
+    padding: '4px 10px',
+    fontSize: '11px',
     fontWeight: 700,
-    letterSpacing: '1px',
-    color: '#64748b',
-    fontFamily: 'monospace',
+    color: '#0284c7',
   },
-  terminalBody: {
-    padding: '12px 16px',
+  brandSub: {
+    fontSize: '13px',
+    color: '#64748b',
+    marginTop: '5px',
+    fontWeight: 500,
+  },
+  sequenceCard: {
+    width: '100%',
+    backgroundColor: '#ffffff',
+    border: '1px solid #e2e8f0',
+    borderRadius: '16px',
+    overflow: 'hidden',
+    boxShadow: '0 8px 24px rgba(15, 23, 42, 0.05), 0 1px 3px rgba(0, 0, 0, 0.03)',
+    marginBottom: '18px',
+  },
+  sequenceHeader: {
     display: 'flex',
-    flexDirection: 'column',
+    alignItems: 'center',
+    padding: '10px 14px',
+    backgroundColor: '#f8fafc',
+    borderBottom: '1px solid #e2e8f0',
     gap: 8,
   },
-  terminalRow: {
+  headerDotCol: {
+    display: 'flex',
+    gap: 5,
+  },
+  headerDot: {
+    width: 7,
+    height: 7,
+    borderRadius: '50%',
+  },
+  sequenceTitle: {
+    fontSize: '10px',
+    fontWeight: 700,
+    letterSpacing: '0.8px',
+    color: '#64748b',
+  },
+  sequenceBody: {
+    padding: '10px 12px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '6px',
+  },
+  sequenceRow: {
     display: 'flex',
     alignItems: 'center',
-    fontSize: 12,
-    fontFamily: "'JetBrains Mono', 'Fira Code', 'Courier New', monospace",
-    transition: 'all 0.3s ease',
+    padding: '6px 10px',
+    borderRadius: '8px',
+    transition: 'all 0.2s ease',
   },
-  terminalText: {
+  rowIconWrapper: {
+    width: '24px',
+    height: '24px',
+    borderRadius: '6px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: '10px',
+    flexShrink: 0,
+  },
+  rowText: {
     flex: 1,
-    letterSpacing: '0.3px',
+    fontSize: '12px',
+    lineHeight: '1.3',
   },
-  termOkBadge: {
-    fontSize: 10,
+  statusBadge: {
+    fontSize: '9px',
     fontWeight: 800,
-    padding: '1px 6px',
-    borderRadius: '4px',
-    backgroundColor: 'rgba(16, 185, 129, 0.15)',
-    color: '#10b981',
-    border: '1px solid rgba(16, 185, 129, 0.3)',
-    letterSpacing: '0.8px',
+    padding: '2px 7px',
+    borderRadius: '6px',
+    border: '1px solid',
+    letterSpacing: '0.5px',
   },
-  progressSection: {
+  progressCard: {
     width: '100%',
   },
-  progressInfoRow: {
+  progressMeta: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: '6px',
   },
   progressLabel: {
-    fontSize: 11,
+    fontSize: '11px',
     fontWeight: 700,
-    letterSpacing: '0.8px',
-    color: '#94a3b8',
+    letterSpacing: '0.6px',
+    color: '#64748b',
   },
   progressPct: {
-    fontSize: 13,
+    fontSize: '12px',
     fontWeight: 800,
-    color: '#38bdf8',
-    fontFamily: 'monospace',
+    color: '#1e3a8a',
   },
   progressBarTrack: {
     width: '100%',
     height: '6px',
-    backgroundColor: 'rgba(30, 41, 59, 0.8)',
+    backgroundColor: '#e2e8f0',
     borderRadius: '999px',
     overflow: 'hidden',
-    border: '1px solid rgba(56, 189, 248, 0.15)',
   },
   progressBarFill: {
     height: '100%',
-    background: 'linear-gradient(90deg, #2563eb 0%, #38bdf8 60%, #60a5fa 100%)',
+    background: 'linear-gradient(90deg, #1e3a8a 0%, #2563eb 50%, #38bdf8 100%)',
     borderRadius: '999px',
-    boxShadow: '0 0 12px rgba(56, 189, 248, 0.7)',
-    transition: 'width 0.08s ease-out',
+    boxShadow: '0 0 8px rgba(37, 99, 235, 0.4)',
+    transition: 'width 0.06s ease-out',
   },
   footerNote: {
     zIndex: 10,
-    fontSize: 11,
+    fontSize: '11px',
     color: '#64748b',
     fontWeight: 600,
-    letterSpacing: '1px',
+    letterSpacing: '0.8px',
     textAlign: 'center',
   },
   kbd: {
-    backgroundColor: 'rgba(30, 41, 59, 0.9)',
-    border: '1px solid rgba(148, 163, 184, 0.25)',
+    backgroundColor: '#ffffff',
+    border: '1px solid #cbd5e1',
     borderRadius: '4px',
     padding: '2px 6px',
-    fontSize: 10,
-    color: '#cbd5e1',
-    fontFamily: 'monospace',
+    fontSize: '10px',
+    color: '#334155',
+    boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
     margin: '0 4px',
   },
 };
